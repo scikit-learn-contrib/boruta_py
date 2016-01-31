@@ -4,7 +4,11 @@ This project hosts Python implementations of the [Boruta all-relevant feature se
 
 ## Dependencies ##
 
-* numpy, scipy, bottleneck, scikit-learn, statsmodels.
+* numpy
+* scipy
+* bottleneck
+* scikit-learn
+* statsmodels
 
 
 ## How to use ##
@@ -35,7 +39,6 @@ care about all factors that contribute to it, not just the bluntest signs
 of it in context of your methodology (yes, minimal optimal set of features
 by definition depends on your classifier choice).
 
-* * *
 
 ## Versions ##
 
@@ -59,8 +62,7 @@ For more details, please check the top of the docstring.
 
 We highly recommend using pruned trees with a depth between 3-7.
 
-BorutaPy2
----------
+### BorutaPy2 ###
 
 After playing around a lot with the original code I identified a few areas 
 where the core algorithm could be improved. I basically ran lots of 
