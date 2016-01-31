@@ -37,8 +37,8 @@ by definition depends on your classifier choice).
 
 ## Versions ##
 
-BorutaPy
---------
+### BorutaPy ###
+
 
 It is the original R package recoded in Python with a few added extra features.
 Some improvements include:  
