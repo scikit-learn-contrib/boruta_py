@@ -35,7 +35,7 @@ by definition depends on your classifier choice).
 
 * * *
 
-### Versions ###
+## Versions ##
 
 BorutaPy
 --------
