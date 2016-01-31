@@ -7,8 +7,6 @@ This project hosts Python implementations of the [Boruta all-relevant feature se
 * numpy, scipy, bottleneck, scikit-learn, statsmodels.
 
 
-* * *
-
 ## How to use ##
 Download, import and do as you would with any other scikit-learn method:
 * fit(X, y)
