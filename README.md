@@ -2,14 +2,18 @@
 
 This project hosts Python implementations of the [Boruta all-relevant feature selection method](https://m2.icm.edu.pl/boruta/).
 
-### How do I get set up? ###
+## Dependencies ##
 
-* You'll need numpy, scipy, bottleneck, statsmodels and scikit-learn to run this.
-* Just download, import into your project and do as you would with any other 
-sklearn method: fit(X, y), transform(X) and fit_transform(X, y) methods are 
-implemented.
+* numpy, scipy, bottleneck, scikit-learn, statsmodels.
+
 
 * * *
+
+## How to use ##
+Download, import and do as you would with any other scikit-learn method:
+* fit(X, y)
+* transform(X)
+* fit_transform(X, y)
 
 ## Description ##
 
