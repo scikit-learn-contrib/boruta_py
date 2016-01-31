@@ -1,4 +1,4 @@
-# README #
+# boruta_py #
 
 This project hosts Python implementations of the [Boruta all-relevant feature selection method](https://m2.icm.edu.pl/boruta/).
 
@@ -102,10 +102,9 @@ We highly recommend using pruned trees with a depth between 3-7.
 
 * * *
 
-### Parameters, attributes, examples, reference ###
+## Docs ##
 
-Parameters
-----------
+### Parameters ###
 
 __estimator__ : object
    > A supervised learning estimator, with a 'fit' method that returns the
@@ -152,8 +151,7 @@ __verbose__ : int, default=0
 
 * * *
 
-Attributes
-----------
+### Attributes ###
 
 **n_features_** : int
    > The number of selected features.
@@ -173,8 +171,7 @@ Attributes
 
 * * *
 
-Examples
---------
+### Examples ###
 
     import pandas
     from sklearn.ensemble import RandomForestClassifier
@@ -203,10 +200,7 @@ Examples
     # call transform() on X to filter it down to selected features
     X_filtered = feat_selector.transform(X)
 
-* * *
 
-References
-----------
+### References ###
 
-[1] Kursa M., Rudnicki W., "Feature Selection with the Boruta Package"
-    Journal of Statistical Software, Vol. 36, Issue 11, Sep 2010
+1. Kursa M., Rudnicki W., "Feature Selection with the Boruta Package" Journal of Statistical Software, Vol. 36, Issue 11, Sep 2010
