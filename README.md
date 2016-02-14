@@ -2,6 +2,8 @@
 
 This project hosts Python implementations of the [Boruta all-relevant feature selection method](https://m2.icm.edu.pl/boruta/).
 
+[Related blog post] (http://danielhomola.com/2015/05/08/borutapy-an-all-relevant-feature-selection-method/)
+
 ## Dependencies ##
 
 * numpy
