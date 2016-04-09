@@ -7,10 +7,11 @@ Original code and method by: Miron B Kursa, https://m2.icm.edu.pl/boruta/
 
 License: BSD 3 clause
 """
-from __future__ import print_function
+from __future__ import print_function, division
 
 import numpy as np
 import scipy as sp
+import pandas as pd
 from statsmodels.sandbox.stats.multicomp import multipletests as multicor
 from sklearn.utils import check_X_y
 from bottleneck import nanrankdata
@@ -218,7 +219,10 @@ class BorutaPy(object):
 
     def _fit(self, X, y):
         # check input params
+
         self._check_params(X, y)
+        # if pandas cast to numpy
+        X = self._check_pandas(X)
 
         # setup variables for Boruta
         n_sample, n_feat = X.shape
@@ -243,6 +247,7 @@ class BorutaPy(object):
         while np.any(dec_reg == 0) and iter < self.max_iter:
             # find optimal number of trees and depth
             if self.n_estimators == 'auto':
+                # number of features that aren't rejected
                 not_rejected = np.where(dec_reg >= 0)[0].shape[0]
                 n_tree = self._get_tree_num(not_rejected) 
                 self.estimator.set_params(n_estimators=n_tree)
@@ -337,10 +342,10 @@ class BorutaPy(object):
             depth = 10
         # how many times a feature should be considered on average
         f_repr = 100
-        # 2 because the training matrix is extended with n shadow features        
-        multi = ((n_feat * 2) / float(np.sqrt(n_feat * 2) * depth)) 
+        # n_feat * 2 because the training matrix is extended with n shadow features
+        multi = ((n_feat * 2) / (np.sqrt(n_feat * 2) * depth))
         n_estimators = int(multi * f_repr)
-        return (n_estimators)
+        return n_estimators
 
     def _get_imp(self, X, y):
         try:
@@ -421,8 +426,18 @@ class BorutaPy(object):
 
         return dec_reg
 
+    def _check_pandas(self, X):
+        if isinstance(X, pd.DataFrame):
+            return X.as_matrix()
+        else:
+            return X
     def _check_params(self, X, y):
-        X, y = check_X_y(X, y)
+        """
+        Check hyperparameters as well as X and y before proceeding with fit.  Raise errors as needed
+        Input X, y
+        Returns None
+        """
+        X, y = check_X_y(X, y)  # check X and y are consistent len, X is Array and y is column
         
         if self.perc <= 0 or self.perc > 100:
             raise ValueError('The percentile should be between 0 and 100.')
