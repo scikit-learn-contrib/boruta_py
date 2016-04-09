@@ -7,12 +7,14 @@ Original code and method by: Miron B Kursa, https://m2.icm.edu.pl/boruta/
 
 License: BSD 3 clause
 """
+from __future__ import print_function
 
 import numpy as np
 import scipy as sp
 from statsmodels.sandbox.stats.multicomp import multipletests as multicor
 from sklearn.utils import check_X_y
 from bottleneck import nanrankdata
+
 
 class BorutaPy(object):
     """
@@ -449,4 +451,4 @@ class BorutaPy(object):
             content = map(str, [n_iter, n_confirmed, n_tentative, n_rejected])
             result = '\n'.join([x[0] +'\t' + x[1] for x in zip(cols, content)])
             output = "\n\nBorutaPy finished running.\n\n" + result
-        print output
+        print(output)
