@@ -14,7 +14,7 @@ from statsmodels.sandbox.stats.multicomp import multipletests as multicor
 from sklearn.utils import check_X_y
 from bottleneck import nanrankdata
 
-class BorutaPy2(object):
+class BorutaPy(object):
     """
     2nd improved Python implementation of the Boruta R package. This version
     modified the core of the algorithm based on lots of benchmarking using 
