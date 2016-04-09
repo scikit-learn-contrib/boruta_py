@@ -310,13 +310,16 @@ class BorutaPy(object):
         iter_ranks = nanrankdata(imp_history_rejected, axis=1)
         rank_medians = np.nanmedian(iter_ranks, axis=0)
         ranks = nanrankdata(rank_medians)
-        # set smallest rank to 3 if there are tentative feats
-        if tentative.shape[0] > 0:
-            ranks = ranks - np.min(ranks) + 3
-        else:            
-            # and 2 otherwise
-            ranks = ranks - np.min(ranks) + 2
-        self.ranking_[not_selected] = ranks
+
+        # update rank for not_selected features
+        if not_selected.shape[0] > 0:
+            # set smallest rank to 3 if there are tentative feats
+            if tentative.shape[0] > 0:
+                ranks = ranks - np.min(ranks) + 3
+            else:
+                # and 2 otherwise
+                ranks = ranks - np.min(ranks) + 2
+            self.ranking_[not_selected] = ranks
 
         # notify user
         if self.verbose > 0:
