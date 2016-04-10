@@ -64,7 +64,7 @@ For more details, please check the top of the docstring.
 
 We highly recommend using pruned trees with a depth between 3-7.
 
-### BorutaPy2 ###
+### BorutaPyPlus ###
 
 After playing around a lot with the original code I identified a few areas 
 where the core algorithm could be improved. I basically ran lots of 
@@ -175,11 +175,12 @@ __verbose__ : int, default=0
 
 ### Examples ###
 
-    import pandas
+    import pandas as pd
     from sklearn.ensemble import RandomForestClassifier
     from boruta_py import boruta_py
 
     # load X and y
+    # NOTE! BorutaPy accepts numpy arrays only, hence .values
     X = pd.read_csv('my_X_table.csv', index_col=0).values
     y = pd.read_csv('my_y_vector.csv', index_col=0).values
 

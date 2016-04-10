@@ -122,11 +122,12 @@ class BorutaPy(object):
     Examples
     --------
 
-    import pandas
+    import pandas as pd
     from sklearn.ensemble import RandomForestClassifier
     from boruta_py import boruta_py
 
     # load X and y
+    # NOTE! BorutaPy accepts numpy arrays onle, hence .values
     X = pd.read_csv('my_X_table.csv', index_col=0).values
     y = pd.read_csv('my_y_vector.csv', index_col=0).values
 
