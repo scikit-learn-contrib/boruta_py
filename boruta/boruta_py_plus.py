@@ -16,32 +16,29 @@ from statsmodels.sandbox.stats.multicomp import multipletests as multicor
 from sklearn.utils import check_X_y
 from bottleneck import nanrankdata
 
-class BorutaPy(object):
+
+class BorutaPyPlus(object):
     """
-    Improved Python implementation of the Boruta R package.
-    
-    The improvements of this implementation include:
-    - Faster run times:
-        Thanks to scikit-learn's fast implementation of the ensemble methods.
-    - Scikit-learn like interface:
-        Use BorutaPy just like any other scikit learner: fit, fit_transform and
-        transform are all implemented in a similar fashion.
-    - Modularity: 
-        Any ensemble method could be used: random forest, extra trees 
-        classifier, even gradient boosted trees.
-    - Automatic tree number:
-        Setting the n_estimator to 'auto' will calculate the number of trees
-        in each itartion based on the number of features under investigation. 
-        This way more trees are used when the training data has many feautres
-        and less when most of the features have been rejected.
-    - Ranking of features:
-        After fitting BorutaPy it provides the user with ranking of features.
-        Confirmed ones are 1, Tentatives are 2, and the rejected are ranked 
-        starting from 3, based on their feautre importance history through 
-        the iterations.
+    2nd improved Python implementation of the Boruta R package. This version
+    modified the core of the algorithm based on lots of benchmarking using 
+    scikit-learn's make_classification() and other feature selection tools.
+
+    The improvements of this implementation compared to BorutaPy class include:
+    - Two step correction: 
+        The original Boruta code corrects for multiple testing in an overly 
+        conservative way. In this implementation, the Benjamini Hochberg FDR is
+        used to correct in each iteration across active features. This means
+        only those features are included in the correction which are still in 
+        the selection process. Following this, each that passed goes through a
+        regular Bonferroni correction to check for the repeated testing over
+        the iterations. 
+    - Percentile: 
+        Instead of using the max values of the shadow features the user can 
+        specify which percentile to use. This gives a finer control over this
+        crucial parameter. For more info, please read about the perc parameter.
     
     We highly recommend using pruned trees with a depth between 3-7.
-
+    
     For more, see the docs of these functions, and the examples below.
 
     Original code and method by: Miron B Kursa, https://m2.icm.edu.pl/boruta/
@@ -71,22 +68,16 @@ class BorutaPy(object):
         dataset. The other parameters of the used estimators need to be set
         with initialisation.
 
-    multi_corr_method : string, default = 'bonferroni'
-        Method for correcting for multiple testing during the feature selection
-        process. statsmodels' multiple test is used, so one of the following:
-        - 'bonferroni' : one-step correction
-        - 'sidak' : one-step correction
-        - 'holm-sidak' : step down method using Sidak adjustments
-        - 'holm' : step-down method using Bonferroni adjustments
-        - 'simes-hochberg' : step-up method  (independent)
-        - 'hommel' : closed method based on Simes tests (non-negative)
-        - 'fdr_bh' : Benjamini/Hochberg  (non-negative)
-        - 'fdr_by' : Benjamini/Yekutieli (negative)
-        - 'fdr_tsbh' : two stage fdr correction (non-negative)
-        - 'fdr_tsbky' : two stage fdr correction (non-negative)
-
-    multi_alpha : float, default = 0.01
-        Level at which the corrected p-values will get rejected.
+    perc : int, default = 99
+        Instead of the max we use the percentile defined by the user, to pick
+        our threshold for comparison between shadow and real features. The max
+        tend to be too stringent. This provides a finer control over this. The
+        lower perc is the more false positives will be picked as relevant but 
+        also the less relevant features will be left out. The usual trade-off.
+        
+    multi_alpha : float, default = 0.05
+        Level at which the corrected p-values will get rejected in both 
+        correction steps.
 
     max_iter : int, default = 100
         The number of maximum iterations to perform.
@@ -137,7 +128,7 @@ class BorutaPy(object):
 
     # define Boruta feature selection method
     feat_selector = boruta_py.BorutaPy(rf, n_estimators='auto', verbose=2)
-    
+
     # find all relevant features
     feat_selector.fit(X, y)
 
@@ -157,12 +148,11 @@ class BorutaPy(object):
         Journal of Statistical Software, Vol. 36, Issue 11, Sep 2010
     """
 
-    def __init__(self, estimator, n_estimators=1000,
-                 multi_corr_method='bonferroni', multi_alpha=0.01,
-                 max_iter=100, verbose=0):
+    def __init__(self, estimator, n_estimators=1000, perc=99,
+                 multi_alpha=0.05, max_iter=100, verbose=0):
         self.estimator = estimator
         self.n_estimators = n_estimators
-        self.multi_corr_method = multi_corr_method
+        self.perc = perc
         self.multi_alpha = multi_alpha
         self.max_iter = max_iter
         self.verbose = verbose
@@ -230,6 +220,7 @@ class BorutaPy(object):
 
     def _fit(self, X, y):
         # check input params
+
         self._check_params(X, y)
         # if pandas cast to numpy
         X = self._check_pandas(X)
@@ -255,22 +246,24 @@ class BorutaPy(object):
 
         # main feature selection loop
         while np.any(dec_reg == 0) and iter < self.max_iter:
-            # find optimal number of trees
+            # find optimal number of trees and depth
             if self.n_estimators == 'auto':
-                not_rejected = np.where(dec_reg >= 0)[0]
-                sample_size = np.min([n_sample, not_rejected.shape[0]])
-                n_tree = self._get_tree_num(sample_size)
+                # number of features that aren't rejected
+                not_rejected = np.where(dec_reg >= 0)[0].shape[0]
+                n_tree = self._get_tree_num(not_rejected) 
                 self.estimator.set_params(n_estimators=n_tree)
-
+                
             # make sure we start with a new tree in each iteration
             rnd_st = np.random.randint(1,1e6,1)[0]
             self.estimator.set_params(random_state=rnd_st)
 
             # add shadow attributes, shuffle them and train estimator, get imps
             cur_imp = self._add_shadows_get_imps(X, y, dec_reg)
-
+            
+            # get the threshold of shadow importances we will use for rejection
+            imp_sha_max = np.percentile(cur_imp[1], self.perc)
+            
             # record importance history
-            imp_sha_max = np.max(cur_imp[1])
             sha_max_history.append(imp_sha_max)
             imp_history = np.vstack((imp_history, cur_imp[0]))
 
@@ -296,7 +289,7 @@ class BorutaPy(object):
         tentative_confirmed = np.where(tentative_median
                                        > np.median(sha_max_history))[0]
         tentative = tentative[tentative_confirmed]
-
+        
         # basic result variables
         self.n_features_ = confirmed.shape[0]
         self.support_ = np.zeros(n_feat, dtype=np.bool)
@@ -346,58 +339,15 @@ class BorutaPy(object):
         else:
             X = X[:, self.support_]
         return X
-
-    def _check_pandas(self, X):
-        if isinstance(X, pd.DataFrame):
-            return X.as_matrix()
-        else:
-            return X
-
-    def _check_params(self, X, y):
-        X, y = check_X_y(X, y)
-        multi_corr_methods = ['bonferroni', 'sidak', 'holm-sidak', 'holm',
-                              'simes-hochberg', 'hommel', 'fdr_bh', 'fdr_by',
-                              'fdr_tsbh', 'fdr_tsbky']
-        if self.multi_corr_method not in multi_corr_methods:
-            raise ValueError('For multiple testing correction method, please '
-                             'choose one of the following:\n' +
-                             '\n'.join(multi_corr_methods))
-        if self.multi_alpha <= 0 or self.multi_alpha > 1:
-            raise ValueError('Multi_alpha should be between 0 and 1.')
-
-
-    def _print_results(self, dec_reg, iter, flag):
-        n_iter = str(iter) + ' / ' + str(self.max_iter)
-        n_confirmed = np.where(dec_reg == 1)[0].shape[0]
-        n_rejected = np.where(dec_reg == -1)[0].shape[0]
-        cols = ['Iteration: ', 'Confirmed: ', 'Tentative: ', 'Rejected: ']
-
-        # still in feature selection
-        if flag == 0:
-            n_tentative = np.where(dec_reg == 0)[0].shape[0]
-            content = map(str,[n_iter,n_confirmed,n_tentative,n_rejected])
-            if self.verbose == 1:
-                output = cols[0] + n_iter
-            elif self.verbose > 1:
-                output = '\n'.join([x[0]+'\t'+x[1] for x in zip(cols,content)])
-
-        # Boruta finished running and tentatives have been filtered
-        else:
-            n_tentative = np.sum(self.support_weak_)
-            content = map(str, [n_iter, n_confirmed, n_tentative, n_rejected])
-            result = '\n'.join([x[0] +'\t' + x[1] for x in zip(cols, content)])
-            output = "\n\nBorutaPy finished running.\n\n" + result
-        print(output)
-
-
+        
     def _get_tree_num(self, n_feat):
         depth = self.estimator.get_params()['max_depth']
         if depth == None:
             depth = 10
         # how many times a feature should be considered on average
         f_repr = 100
-        # 2 because the training matrix is extended with n shadow features        
-        multi = ((n_feat * 2) / np.sqrt(n_feat * 2) * depth)
+        # n_feat * 2 because the training matrix is extended with n shadow features
+        multi = ((n_feat * 2) / (np.sqrt(n_feat * 2) * depth))
         n_estimators = int(multi * f_repr)
         return n_estimators
 
@@ -423,7 +373,6 @@ class BorutaPy(object):
         x_cur_ind = np.where(dec_reg >= 0)[0]
         x_cur = np.copy(X[:, x_cur_ind])
         x_cur_w = x_cur.shape[1]
-
         # deep copy the matrix for the shadow matrix
         x_sha = np.copy(x_cur)
         # make sure there's at least 5 columns in the shadow matrix for
@@ -433,7 +382,6 @@ class BorutaPy(object):
         x_sha = np.apply_along_axis(self._get_shuffle, 0, x_sha)
         # get importance of the merged matrix
         imp = self._get_imp(np.hstack((x_cur, x_sha)), y)
-
         # separate importances of real and shadow features
         imp_sha = imp[x_cur_w:]
         imp_real = np.zeros(X.shape[1])        
@@ -450,17 +398,76 @@ class BorutaPy(object):
 
 
     def _do_tests(self, dec_reg, hit_reg, iter):
+        active_features = np.where(dec_reg >= 0)[0]        
+        hits = hit_reg[active_features]
         # get uncorrected p values based on hit_reg
-        to_accept_ps = sp.stats.binom.sf(hit_reg - 1, iter, .5).flatten()
-        to_reject_ps = sp.stats.binom.cdf(hit_reg, iter, .5).flatten()
+        to_accept_ps = sp.stats.binom.sf(hits - 1, iter, .5).flatten()
+        to_reject_ps = sp.stats.binom.cdf(hits, iter, .5).flatten()
+        
+        # two step multicor process
+        # first we correct for testing several features in each round using FDR
+        to_accept = multicor(to_accept_ps, alpha=self.multi_alpha, 
+                             method='fdr_bh')[0]
+        to_reject = multicor(to_reject_ps, alpha=self.multi_alpha, 
+                             method='fdr_bh')[0]
+        
+        # second we correct for testing the same feature over and over again 
+        # using bonferroni
+        to_accept2 = to_accept_ps <= self.multi_alpha / float(iter)
+        to_reject2 = to_reject_ps <= self.multi_alpha / float(iter)
+        
+        # combine the two multi corrections, and get indexes
+        to_accept = to_accept * to_accept2
+        to_reject = to_reject * to_reject2
+        
+        # find features which are 0 and have been rejected or accepted
+        to_accept = np.where((dec_reg[active_features] == 0) * to_accept)[0]
+        to_reject = np.where((dec_reg[active_features] == 0) * to_reject)[0]
+        
+        # updating dec_reg
+        dec_reg[active_features[to_accept]] = 1
+        dec_reg[active_features[to_reject]] = -1
 
-        # correct p values for multiple testing
-        to_accept = np.where(multicor(to_accept_ps, alpha=self.multi_alpha,
-                                      method=self.multi_corr_method)[0])[0]
-        to_reject = np.where(multicor(to_reject_ps, alpha=self.multi_alpha,
-                                      method=self.multi_corr_method)[0])[0]
-
-        # finding those to_accept and to_reject that are 0, and setting them
-        dec_reg[to_accept[np.where(dec_reg[to_accept] == 0)]] = 1
-        dec_reg[to_reject[np.where(dec_reg[to_reject] == 0)]] = -1
         return dec_reg
+
+    def _check_pandas(self, X):
+        if isinstance(X, pd.DataFrame):
+            return X.as_matrix()
+        else:
+            return X
+    def _check_params(self, X, y):
+        """
+        Check hyperparameters as well as X and y before proceeding with fit.  Raise errors as needed
+        Input X, y
+        Returns None
+        """
+        X, y = check_X_y(X, y)  # check X and y are consistent len, X is Array and y is column
+        
+        if self.perc <= 0 or self.perc > 100:
+            raise ValueError('The percentile should be between 0 and 100.')
+        
+        if self.multi_alpha <= 0 or self.multi_alpha > 1:
+            raise ValueError('Multi_alpha should be between 0 and 1.')
+
+    def _print_results(self, dec_reg, iter, flag):
+        n_iter = str(iter) + ' / ' + str(self.max_iter)
+        n_confirmed = np.where(dec_reg == 1)[0].shape[0]
+        n_rejected = np.where(dec_reg == -1)[0].shape[0]
+        cols = ['Iteration: ', 'Confirmed: ', 'Tentative: ', 'Rejected: ']
+
+        # still in feature selection
+        if flag == 0:
+            n_tentative = np.where(dec_reg == 0)[0].shape[0]
+            content = map(str,[n_iter,n_confirmed,n_tentative,n_rejected])
+            if self.verbose == 1:
+                output = cols[0] + n_iter
+            elif self.verbose > 1:
+                output = '\n'.join([x[0]+'\t'+x[1] for x in zip(cols,content)])
+
+        # Boruta finished running and tentatives have been filtered
+        else:
+            n_tentative = np.sum(self.support_weak_)
+            content = map(str, [n_iter, n_confirmed, n_tentative, n_rejected])
+            result = '\n'.join([x[0] +'\t' + x[1] for x in zip(cols, content)])
+            output = "\n\nBorutaPy finished running.\n\n" + result
+        print(output)

@@ -180,7 +180,7 @@ __verbose__ : int, default=0
     from boruta_py import boruta_py
 
     # load X and y
-    # NOTE! BorutaPy accepts numpy arrays only, hence .values
+    # NOTE BorutaPy accepts numpy arrays only, hence .values
     X = pd.read_csv('my_X_table.csv', index_col=0).values
     y = pd.read_csv('my_y_vector.csv', index_col=0).values
 
