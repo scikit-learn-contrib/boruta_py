@@ -7,14 +7,17 @@ Original code and method by: Miron B Kursa, https://m2.icm.edu.pl/boruta/
 
 License: BSD 3 clause
 """
+from __future__ import print_function, division
 
 import numpy as np
 import scipy as sp
+import pandas as pd
 from statsmodels.sandbox.stats.multicomp import multipletests as multicor
 from sklearn.utils import check_X_y
 from bottleneck import nanrankdata
 
-class BorutaPy2(object):
+
+class BorutaPyPlus(object):
     """
     2nd improved Python implementation of the Boruta R package. This version
     modified the core of the algorithm based on lots of benchmarking using 
@@ -216,7 +219,10 @@ class BorutaPy2(object):
 
     def _fit(self, X, y):
         # check input params
+
         self._check_params(X, y)
+        # if pandas cast to numpy
+        X = self._check_pandas(X)
 
         # setup variables for Boruta
         n_sample, n_feat = X.shape
@@ -241,6 +247,7 @@ class BorutaPy2(object):
         while np.any(dec_reg == 0) and iter < self.max_iter:
             # find optimal number of trees and depth
             if self.n_estimators == 'auto':
+                # number of features that aren't rejected
                 not_rejected = np.where(dec_reg >= 0)[0].shape[0]
                 n_tree = self._get_tree_num(not_rejected) 
                 self.estimator.set_params(n_estimators=n_tree)
@@ -303,13 +310,16 @@ class BorutaPy2(object):
         iter_ranks = nanrankdata(imp_history_rejected, axis=1)
         rank_medians = np.nanmedian(iter_ranks, axis=0)
         ranks = nanrankdata(rank_medians)
-        # set smallest rank to 3 if there are tentative feats
-        if tentative.shape[0] > 0:
-            ranks = ranks - np.min(ranks) + 3
-        else:            
-            # and 2 otherwise
-            ranks = ranks - np.min(ranks) + 2
-        self.ranking_[not_selected] = ranks
+
+        # update rank for not_selected features
+        if not_selected.shape[0] > 0:
+            # set smallest rank to 3 if there are tentative feats
+            if tentative.shape[0] > 0:
+                ranks = ranks - np.min(ranks) + 3
+            else:
+                # and 2 otherwise
+                ranks = ranks - np.min(ranks) + 2
+            self.ranking_[not_selected] = ranks
 
         # notify user
         if self.verbose > 0:
@@ -335,10 +345,10 @@ class BorutaPy2(object):
             depth = 10
         # how many times a feature should be considered on average
         f_repr = 100
-        # 2 because the training matrix is extended with n shadow features        
-        multi = ((n_feat * 2) / float(np.sqrt(n_feat * 2) * depth)) 
+        # n_feat * 2 because the training matrix is extended with n shadow features
+        multi = ((n_feat * 2) / (np.sqrt(n_feat * 2) * depth))
         n_estimators = int(multi * f_repr)
-        return (n_estimators)
+        return n_estimators
 
     def _get_imp(self, X, y):
         try:
@@ -419,8 +429,18 @@ class BorutaPy2(object):
 
         return dec_reg
 
+    def _check_pandas(self, X):
+        if isinstance(X, pd.DataFrame):
+            return X.as_matrix()
+        else:
+            return X
     def _check_params(self, X, y):
-        X, y = check_X_y(X, y)
+        """
+        Check hyperparameters as well as X and y before proceeding with fit.  Raise errors as needed
+        Input X, y
+        Returns None
+        """
+        X, y = check_X_y(X, y)  # check X and y are consistent len, X is Array and y is column
         
         if self.perc <= 0 or self.perc > 100:
             raise ValueError('The percentile should be between 0 and 100.')
@@ -449,4 +469,4 @@ class BorutaPy2(object):
             content = map(str, [n_iter, n_confirmed, n_tentative, n_rejected])
             result = '\n'.join([x[0] +'\t' + x[1] for x in zip(cols, content)])
             output = "\n\nBorutaPy finished running.\n\n" + result
-        print output
+        print(output)

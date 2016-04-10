@@ -7,9 +7,11 @@ Original code and method by: Miron B Kursa, https://m2.icm.edu.pl/boruta/
 
 License: BSD 3 clause
 """
+from __future__ import print_function, division
 
 import numpy as np
 import scipy as sp
+import pandas as pd
 from statsmodels.sandbox.stats.multicomp import multipletests as multicor
 from sklearn.utils import check_X_y
 from bottleneck import nanrankdata
@@ -228,6 +230,8 @@ class BorutaPy(object):
     def _fit(self, X, y):
         # check input params
         self._check_params(X, y)
+        # if pandas cast to numpy
+        X = self._check_pandas(X)
 
         # setup variables for Boruta
         n_sample, n_feat = X.shape
@@ -313,13 +317,16 @@ class BorutaPy(object):
         iter_ranks = nanrankdata(imp_history_rejected, axis=1)
         rank_medians = np.nanmedian(iter_ranks, axis=0)
         ranks = nanrankdata(rank_medians)
-        # set smallest rank to 3 if there are tentative feats
-        if tentative.shape[0] > 0:
-            ranks = ranks - np.min(ranks) + 3
-        else:            
-            # and 2 otherwise
-            ranks = ranks - np.min(ranks) + 2
-        self.ranking_[not_selected] = ranks
+
+        # update rank for not_selected features
+        if not_selected.shape[0] > 0:
+            # set smallest rank to 3 if there are tentative feats
+            if tentative.shape[0] > 0:
+                ranks = ranks - np.min(ranks) + 3
+            else:
+                # and 2 otherwise
+                ranks = ranks - np.min(ranks) + 2
+            self.ranking_[not_selected] = ranks
 
         # notify user
         if self.verbose > 0:
@@ -338,6 +345,12 @@ class BorutaPy(object):
         else:
             X = X[:, self.support_]
         return X
+
+    def _check_pandas(self, X):
+        if isinstance(X, pd.DataFrame):
+            return X.as_matrix()
+        else:
+            return X
 
     def _check_params(self, X, y):
         X, y = check_X_y(X, y)
@@ -373,7 +386,7 @@ class BorutaPy(object):
             content = map(str, [n_iter, n_confirmed, n_tentative, n_rejected])
             result = '\n'.join([x[0] +'\t' + x[1] for x in zip(cols, content)])
             output = "\n\nBorutaPy finished running.\n\n" + result
-        print output
+        print(output)
 
 
     def _get_tree_num(self, n_feat):
@@ -383,9 +396,9 @@ class BorutaPy(object):
         # how many times a feature should be considered on average
         f_repr = 100
         # 2 because the training matrix is extended with n shadow features        
-        multi = ((n_feat * 2) / float(np.sqrt(n_feat * 2) * depth)) 
+        multi = ((n_feat * 2) / np.sqrt(n_feat * 2) * depth)
         n_estimators = int(multi * f_repr)
-        return int(n_estimators)
+        return n_estimators
 
     def _get_imp(self, X, y):
         try:
