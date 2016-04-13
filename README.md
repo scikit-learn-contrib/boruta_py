@@ -39,9 +39,7 @@ of it in context of your methodology (yes, minimal optimal set of features
 by definition depends on your classifier choice).
 
 
-## Versions ##
-
-### BorutaPy ###
+## What's different in BorutaPy? ##
 
 It is the original R package recoded in Python with a few added extra features.
 Some improvements include:  
@@ -98,11 +96,7 @@ deviding the p-value threshold with the current iteration index.
 If this two step correction is not required, the two_step parameter has to be
 set to False, then (with perc=100) BorutaPy behaves exactly as the R version.
 
-* * *
-
-## Docs ##
-
-### Parameters ###
+## Parameters ##
 
 __estimator__ : object
    > A supervised learning estimator, with a 'fit' method that returns the
@@ -137,9 +131,8 @@ __max_iter__ : int, default = 100
 __verbose__ : int, default=0
    > Controls verbosity of output.
 
-* * *
 
-### Attributes ###
+## Attributes ##
 
 **n_features_** : int
    > The number of selected features.
@@ -157,9 +150,8 @@ __verbose__ : int, default=0
   >  best) features are assigned rank 1 and tentative features are assigned
   >  rank 2.
 
-* * *
 
-### Examples ###
+## Examples ##
 
     import pandas as pd
     from sklearn.ensemble import RandomForestClassifier
@@ -190,6 +182,6 @@ __verbose__ : int, default=0
     X_filtered = feat_selector.transform(X)
 
 
-### References ###
+## References ##
 
 1. Kursa M., Rudnicki W., "Feature Selection with the Boruta Package" Journal of Statistical Software, Vol. 36, Issue 11, Sep 2010
