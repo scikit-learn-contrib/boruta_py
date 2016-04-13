@@ -9,10 +9,7 @@ setup(name='Boruta',
       license='BSD 3 clause',
       packages=['boruta'],
       zip_safe=False,
-      install_requires=['bottleneck==1.0.0',
-                        'numpy==1.10.4',
-                        'pandas==0.18.0',
+      install_requires=['numpy==1.10.4',
                         'scikit-learn==0.17.1',
-                        'scipy==0.17.0',
-                        'statsmodels==0.6.1'
+                        'scipy==0.17.0'
                         ])

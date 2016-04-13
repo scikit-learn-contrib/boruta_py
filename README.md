@@ -8,10 +8,7 @@ This project hosts Python implementations of the [Boruta all-relevant feature se
 
 * numpy
 * scipy
-* bottleneck
 * scikit-learn
-* statsmodels
-
 
 ## How to use ##
 Download, import and do as you would with any other scikit-learn method:
@@ -46,7 +43,6 @@ by definition depends on your classifier choice).
 
 ### BorutaPy ###
 
-
 It is the original R package recoded in Python with a few added extra features.
 Some improvements include:  
 
@@ -59,48 +55,48 @@ Some improvements include:
 * Automatic n_estimator selection
 
 * Ranking of features
-    
+
 For more details, please check the top of the docstring.
 
 We highly recommend using pruned trees with a depth between 3-7.
 
-### BorutaPyPlus ###
-
-After playing around a lot with the original code I identified a few areas 
-where the core algorithm could be improved. I basically ran lots of 
-benchmarking tests on simulated datasets (scikit-learn's amazing 
-make_classification was used for generating these). 
+Also, after playing around a lot with the original code I identified a few areas
+where the core algorithm could be improved/altered to make it less strict and
+more applicable to biological data, where the Bonferroni correction might be
+overly harsh.
 
 __Percentile as threshold__  
 The original method uses the maximum of the shadow features as a threshold in
 deciding which real feature is doing better than the shadow ones. This could be
-overly harsh. 
+overly harsh.
 
-To control this, in the 2nd version the perc parameter sets the
-percentile of the shadow features' importances, the algorithm uses as the 
-threshold. The default of 99 is close to taking the maximum, but as it's a
-percentile, it changes with the size of the dataset. With several thousands of 
+To control this, I added the perc parameter, which sets the
+percentile of the shadow features' importances, the algorithm uses as the
+threshold. The default of 100 which is equivalent to taking the maximum as the
+R version of Boruta does, but it could be relaxed. Note, since this is the
+percentile, it changes with the size of the dataset. With several thousands of
 features it isn't as stringent as with a few dozens at the end of a Boruta run.
 
 
 __Two step correction for multiple testing__  
-The correction for multiple testing was improved by making it a two step 
+The correction for multiple testing was relaxed by making it a two step
 process, rather than a harsh one step Bonferroni correction.
 
-We need to correct firstly because in each iteration we test a number of 
+We need to correct firstly because in each iteration we test a number of
 features against the null hypothesis (does a feature perform better than
-expected by random). For this the Bonferroni correction is used in the original 
-code which is known to be too stringent in such scenarios, and also the 
-original code corrects for n features, even if we are in the 50th iteration 
-where we only have k<<n features left. For this reason the first step of 
- correction is the widely used Benjamini Hochberg FDR. 
- 
+expected by random). For this the Bonferroni correction is used in the original
+code which is known to be too stringent in such scenarios (at least for
+biological data), and also the original code corrects for n features, even if
+we are in the 50th iteration where we only have k<<n features left. For this
+reason the first step of correction is the widely used Benjamini Hochberg FDR.
+
 Following that however we also need to account for the fact that we have been
 testing the same features over and over again in each iteration with the
 same test. For this scenario the Bonferroni is perfect, so it is applied by
 deviding the p-value threshold with the current iteration index.
- 
-We highly recommend using pruned trees with a depth between 3-7.
+
+If this two step correction is not required, the two_step parameter has to be
+set to False, then (with perc=100) BorutaPy behaves exactly as the R version.
 
 * * *
 
@@ -119,31 +115,21 @@ __n_estimators__ : int or string, default = 1000
    > dataset. The other parameters of the used estimators need to be set
    > with initialisation.
 
-__multi_corr_method__ : string, default = 'bonferroni' - only in BorutaPy
->Method for correcting for multiple testing during the feature selection process. statsmodels' multiple test is used, so one of the following:
-
->* 'bonferroni' : one-step correction
->* 'sidak' : one-step correction
->* 'holm-sidak' : step down method using Sidak adjustments
->* 'holm' : step-down method using Bonferroni adjustments
->* 'simes-hochberg' : step-up method  (independent)
->* 'hommel' : closed method based on Simes tests (non-negative)
->* 'fdr_bh' : Benjamini/Hochberg  (non-negative)
->* 'fdr_by' : Benjamini/Yekutieli (negative)
->* 'fdr_tsbh' : two stage fdr correction (non-negative)
->* 'fdr_tsbky' : two stage fdr correction (non-negative)
-
-__perc__ : int, default = 99 - only in BorutaPy2
+__perc__ : int, default = 100
    > Instead of the max we use the percentile defined by the user, to pick
    > our threshold for comparison between shadow and real features. The max
    > tend to be too stringent. This provides a finer control over this. The
-   > lower perc is the more false positives will be picked as relevant but 
+   > lower perc is the more false positives will be picked as relevant but
    > also the less relevant features will be left out. The usual trade-off.
+   > The default is essentially the vanilla Boruta corresponding to the max.
 
-
-__multi_alpha__ : float, default = 0.05
+__alpha__ : float, default = 0.05
    > Level at which the corrected p-values will get rejected in both correction
    steps.
+
+__two_step__ : Boolean, default = True
+  > If you want to use the original implementation of Boruta with Bonferroni
+  > correction only set this to False.
 
 __max_iter__ : int, default = 100
    > The number of maximum iterations to perform.
@@ -177,10 +163,10 @@ __verbose__ : int, default=0
 
     import pandas as pd
     from sklearn.ensemble import RandomForestClassifier
-    from boruta_py import boruta_py
+    from boruta_py import BorutaPy
 
     # load X and y
-    # NOTE BorutaPy accepts numpy arrays only, hence .values
+    # NOTE BorutaPy accepts numpy arrays only, hence the .values attribute
     X = pd.read_csv('my_X_table.csv', index_col=0).values
     y = pd.read_csv('my_y_vector.csv', index_col=0).values
 
@@ -189,7 +175,7 @@ __verbose__ : int, default=0
     rf = RandomForestClassifier(n_jobs=-1, class_weight='auto', max_depth=5)
 
     # define Boruta feature selection method
-    feat_selector = boruta_py.BorutaPy(rf, n_estimators='auto', verbose=2)
+    feat_selector = BorutaPy(rf, n_estimators='auto', verbose=2)
 
     # find all relevant features
     feat_selector.fit(X, y)
