@@ -155,7 +155,7 @@ __verbose__ : int, default=0
 
     import pandas as pd
     from sklearn.ensemble import RandomForestClassifier
-    from boruta_py import BorutaPy
+    from boruta import BorutaPy
 
     # load X and y
     # NOTE BorutaPy accepts numpy arrays only, hence the .values attribute
