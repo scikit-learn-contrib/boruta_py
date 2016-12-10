@@ -11,7 +11,7 @@ License: BSD 3 clause
 from __future__ import print_function, division
 import numpy as np
 import scipy as sp
-from sklearn.utils import check_X_y
+from sklearn.utils import check_random_state, check_X_y
 
 class BorutaPy(object):
     """
@@ -99,6 +99,12 @@ class BorutaPy(object):
     max_iter : int, default = 100
         The number of maximum iterations to perform.
 
+    random_state : int, RandomState instance or None; default=None
+        If int, random_state is the seed used by the random number generator;
+        If RandomState instance, random_state is the random number generator;
+        If None, the random number generator is the RandomState instance used
+        by `np.random`.
+
     verbose : int, default=0
         Controls verbosity of output:
         - 0: no output
@@ -166,13 +172,14 @@ class BorutaPy(object):
     """
 
     def __init__(self, estimator, n_estimators=1000, perc=100, alpha=0.05, 
-                 two_step=True, max_iter=100, verbose=0):
+                 two_step=True, max_iter=100, random_state=None, verbose=0):
         self.estimator = estimator
         self.n_estimators = n_estimators
         self.perc = perc
         self.alpha = alpha
         self.two_step = two_step
         self.max_iter = max_iter
+        self.random_state = check_random_state(random_state)
         self.verbose = verbose
 
     def fit(self, X, y):
@@ -268,8 +275,7 @@ class BorutaPy(object):
                 self.estimator.set_params(n_estimators=n_tree)
 
             # make sure we start with a new tree in each iteration
-            rnd_st = np.random.randint(1,1e6,1)[0]
-            self.estimator.set_params(random_state=rnd_st)
+            self.estimator.set_params(random_state=self.random_state)
 
             # add shadow attributes, shuffle them and train estimator, get imps
             cur_imp = self._add_shadows_get_imps(X, y, dec_reg)
@@ -380,7 +386,7 @@ class BorutaPy(object):
         return imp
 
     def _get_shuffle(self, seq):
-        np.random.shuffle(seq)
+        self.random_state.shuffle(seq)
         return seq
 
     def _add_shadows_get_imps(self, X, y, dec_reg):
