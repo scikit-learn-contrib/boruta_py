@@ -490,8 +490,8 @@ class BorutaPy(object):
         """
         Replaces bottleneck's nanrankdata with scipy and numpy alternative.
         """
-        ranks = sp.stats.mstats.rankdata(np.ma.masked_invalid(X), axis=axis)
-        ranks[ranks == 0] = np.nan
+        ranks = sp.stats.mstats.rankdata(X, axis=axis)
+        ranks[np.isnan(X)] = np.nan
         return ranks
 
     def _check_params(self, X, y):
