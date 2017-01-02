@@ -173,7 +173,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         Journal of Statistical Software, Vol. 36, Issue 11, Sep 2010
     """
 
-    def __init__(self, estimator, n_estimators=1000, perc=100, alpha=0.05, 
+    def __init__(self, estimator, n_estimators=1000, perc=100, alpha=0.05,
                  two_step=True, max_iter=100, random_state=None, verbose=0):
         self.estimator = estimator
         self.n_estimators = n_estimators
@@ -349,7 +349,6 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             self._print_results(dec_reg, _iter, 1)
         return self
 
-       
     def _transform(self, X, weak=False):
         # sanity check
         try:
@@ -410,7 +409,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         imp_real = np.zeros(X.shape[1])
         imp_real[:] = np.nan
         imp_real[x_cur_ind] = imp[:x_cur_w]
-        return (imp_real, imp_sha)
+        return imp_real, imp_sha
 
     def _assign_hits(self, hit_reg, cur_imp, imp_sha_max):
         # register hits for feautres that did better than the best of shadows
@@ -437,14 +436,14 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             to_reject2 = to_reject_ps <= self.alpha / float(_iter)
 
             # combine the two multi corrections, and get indexes
-            to_accept = to_accept * to_accept2
-            to_reject = to_reject * to_reject2
+            to_accept *= to_accept2
+            to_reject *= to_reject2
         else:
             # as in th original Boruta, we simply do bonferroni correction
             # with the total n_feat in each iteration
             to_accept = to_accept_ps <= self.alpha / float(len(dec_reg))
             to_reject = to_reject_ps <= self.alpha / float(len(dec_reg))
-        
+
         # find features which are 0 and have been rejected or accepted
         to_accept = np.where((dec_reg[active_features] == 0) * to_accept)[0]
         to_reject = np.where((dec_reg[active_features] == 0) * to_reject)[0]
@@ -477,16 +476,16 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         pvals_sortind = np.argsort(pvals)
         pvals_sorted = np.take(pvals, pvals_sortind)
         nobs = len(pvals_sorted)
-        ecdffactor = np.arange(1,nobs+1)/float(nobs)
+        ecdffactor = np.arange(1, nobs + 1) / float(nobs)
 
-        reject = pvals_sorted <= ecdffactor*alpha
+        reject = pvals_sorted <= ecdffactor * alpha
         if reject.any():
             rejectmax = max(np.nonzero(reject)[0])
             reject[:rejectmax] = True
 
         pvals_corrected_raw = pvals_sorted / ecdffactor
         pvals_corrected = np.minimum.accumulate(pvals_corrected_raw[::-1])[::-1]
-        pvals_corrected[pvals_corrected>1] = 1
+        pvals_corrected[pvals_corrected > 1] = 1
         # reorder p-values and rejection mask to original order of pvals
         pvals_corrected_ = np.empty_like(pvals_corrected)
         pvals_corrected_[pvals_sortind] = pvals_corrected
@@ -523,16 +522,16 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         # still in feature selection
         if flag == 0:
             n_tentative = np.where(dec_reg == 0)[0].shape[0]
-            content = map(str,[n_iter,n_confirmed,n_tentative,n_rejected])
+            content = map(str, [n_iter, n_confirmed, n_tentative, n_rejected])
             if self.verbose == 1:
                 output = cols[0] + n_iter
             elif self.verbose > 1:
-                output = '\n'.join([x[0]+'\t'+x[1] for x in zip(cols,content)])
+                output = '\n'.join([x[0] + '\t' + x[1] for x in zip(cols, content)])
 
         # Boruta finished running and tentatives have been filtered
         else:
             n_tentative = np.sum(self.support_weak_)
             content = map(str, [n_iter, n_confirmed, n_tentative, n_rejected])
-            result = '\n'.join([x[0] +'\t' + x[1] for x in zip(cols, content)])
+            result = '\n'.join([x[0] + '\t' + x[1] for x in zip(cols, content)])
             output = "\n\nBorutaPy finished running.\n\n" + result
         print(output)
