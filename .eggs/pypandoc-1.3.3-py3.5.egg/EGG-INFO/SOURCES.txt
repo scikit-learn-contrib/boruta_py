@@ -1,0 +1,16 @@
+LICENSE
+MANIFEST.in
+README.md
+filter_test.md
+setup.cfg
+setup.py
+tests.py
+examples/services.py
+pypandoc/__init__.py
+pypandoc/pandoc_download.py
+pypandoc/py3compat.py
+pypandoc.egg-info/PKG-INFO
+pypandoc.egg-info/SOURCES.txt
+pypandoc.egg-info/dependency_links.txt
+pypandoc.egg-info/requires.txt
+pypandoc.egg-info/top_level.txt

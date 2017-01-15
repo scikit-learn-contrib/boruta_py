@@ -1,0 +1,4 @@
+
+        [distutils.setup_keywords]
+        long_description_markdown_filename=setuptools_markdown:long_description_markdown_filename
+        

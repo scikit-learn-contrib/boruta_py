@@ -1,0 +1,12 @@
+README.rst
+setup.cfg
+setup.py
+setuptools_markdown.py
+setuptools_markdown.egg-info/PKG-INFO
+setuptools_markdown.egg-info/SOURCES.txt
+setuptools_markdown.egg-info/dependency_links.txt
+setuptools_markdown.egg-info/entry_points.txt
+setuptools_markdown.egg-info/not-zip-safe
+setuptools_markdown.egg-info/pbr.json
+setuptools_markdown.egg-info/requires.txt
+setuptools_markdown.egg-info/top_level.txt
