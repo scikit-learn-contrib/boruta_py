@@ -137,7 +137,11 @@ class BorutaPy(BaseEstimator, TransformerMixin):
 
     Examples
     --------
-        
+    
+    import pandas as pd
+    from sklearn.ensemble import RandomForestClassifier
+    from boruta import BorutaPy
+    
     # load X and y
     # NOTE BorutaPy accepts numpy arrays only, hence the .values attribute
     X = pd.read_csv('examples/test_X.csv', index_col=0).values
