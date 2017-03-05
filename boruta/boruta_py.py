@@ -137,32 +137,29 @@ class BorutaPy(BaseEstimator, TransformerMixin):
 
     Examples
     --------
-
-    import pandas as pd
-    from sklearn.ensemble import RandomForestClassifier
-    from boruta_py import BorutaPy
-
+        
     # load X and y
     # NOTE BorutaPy accepts numpy arrays only, hence the .values attribute
-    X = pd.read_csv('my_X_table.csv', index_col=0).values
-    y = pd.read_csv('my_y_vector.csv', index_col=0).values
-
+    X = pd.read_csv('examples/test_X.csv', index_col=0).values
+    y = pd.read_csv('examples/test_y.csv', header=None, index_col=0).values
+    y = y.ravel()
+    
     # define random forest classifier, with utilising all cores and
     # sampling in proportion to y labels
     rf = RandomForestClassifier(n_jobs=-1, class_weight='auto', max_depth=5)
-
+    
     # define Boruta feature selection method
-    feat_selector = BorutaPy(rf, n_estimators='auto', verbose=2)
-
-    # find all relevant features
+    feat_selector = BorutaPy(rf, n_estimators='auto', verbose=2, random_state=1)
+    
+    # find all relevant features - 5 features should be selected
     feat_selector.fit(X, y)
-
-    # check selected features
+    
+    # check selected features - first 5 features are selected
     feat_selector.support_
-
+    
     # check ranking of features
     feat_selector.ranking_
-
+    
     # call transform() on X to filter it down to selected features
     X_filtered = feat_selector.transform(X)
 
@@ -181,7 +178,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         self.alpha = alpha
         self.two_step = two_step
         self.max_iter = max_iter
-        self.random_state = check_random_state(random_state)
+        self.random_state = random_state
         self.verbose = verbose
 
     def fit(self, X, y):
@@ -248,6 +245,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
     def _fit(self, X, y):
         # check input params
         self._check_params(X, y)
+        self.random_state = check_random_state(self.random_state)
         # setup variables for Boruta
         n_sample, n_feat = X.shape
         _iter = 1
