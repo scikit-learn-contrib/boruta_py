@@ -1,0 +1,6 @@
+# Include the license file
+include LICENSE
+
+# Include the data files
+include boruta/examples/test_X.csv
+include boruta/examples/test_y.csv
