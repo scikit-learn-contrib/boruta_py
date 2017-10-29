@@ -380,7 +380,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             self.estimator.fit(X, y)
         except Exception as e:
             raise ValueError('Please check your X and y variable. The provided'
-                             'estimator cannot be fitted to your data.\n' + e)
+                             'estimator cannot be fitted to your data.\n' + str(e))
         try:
             imp = self.estimator.feature_importances_
         except Exception:
