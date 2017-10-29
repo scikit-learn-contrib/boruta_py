@@ -165,7 +165,7 @@ __verbose__ : int, default=0
     
     # define random forest classifier, with utilising all cores and
     # sampling in proportion to y labels
-    rf = RandomForestClassifier(n_jobs=-1, class_weight='auto', max_depth=5)
+    rf = RandomForestClassifier(n_jobs=-1, class_weight='balanced', max_depth=5)
     
     # define Boruta feature selection method
     feat_selector = BorutaPy(rf, n_estimators='auto', verbose=2, random_state=1)
