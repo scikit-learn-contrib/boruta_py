@@ -13,7 +13,7 @@ This project hosts Python implementations of the [Boruta all-relevant feature se
 ## Installation ##
 ### Installation via pip ###
 ```
-!pip install boruta
+pip install boruta
 ```
 
 ### Installation via conda ###
