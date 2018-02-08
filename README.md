@@ -10,6 +10,17 @@ This project hosts Python implementations of the [Boruta all-relevant feature se
 * scipy
 * scikit-learn
 
+## Installation ##
+### Installation via pip ###
+```
+!pip install boruta
+```
+
+### Installation via conda ###
+```
+conda install -y -c saravji boruta
+```
+
 ## How to use ##
 Download, import and do as you would with any other scikit-learn method:
 * fit(X, y)
