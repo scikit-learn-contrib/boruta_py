@@ -40,7 +40,7 @@ class BorutaTestCases(unittest.TestCase):
         bt.fit(X, y)
 
         # make sure that only all the relevant features are returned
-        self.assertItemsEqual(range(5), list(np.where(bt.support_)[0]))
+        self.assertListEqual(list(range(5)), list(np.where(bt.support_)[0]))
 
 
 if __name__ == '__main__':
