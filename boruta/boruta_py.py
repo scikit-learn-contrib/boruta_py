@@ -419,7 +419,8 @@ class BorutaPy(BaseEstimator, TransformerMixin):
 
     def _assign_hits(self, hit_reg, cur_imp, imp_sha_max):
         # register hits for features that did better than the best of shadows
-        cur_imp_no_nan = [val for val in cur_imp[0] if not np.isnan(val)]
+        cur_imp_no_nan = cur_imp[0]
+        cur_imp_no_nan[np.isnan(cur_imp_no_nan)] = 0
         hits = np.where(cur_imp_no_nan > imp_sha_max)[0]
         hit_reg[hits] += 1
         return hit_reg
