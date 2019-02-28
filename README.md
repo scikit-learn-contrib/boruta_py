@@ -21,7 +21,7 @@ Download, import and do as you would with any other scikit-learn method:
 Python implementations of the Boruta R package.
 
 This implementation tries to mimic the scikit-learn interface, so use fit,
-transform or fit_transform, to run the feautre selection.
+transform or fit_transform, to run the feature selection.
 
 For more, see the docs of these functions, and the examples below.
 
