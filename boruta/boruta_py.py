@@ -331,7 +331,13 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         not_selected = np.setdiff1d(np.arange(n_feat), selected)
         # large importance values should rank higher = lower ranks -> *(-1)
         imp_history_rejected = imp_history[1:, not_selected] * -1
+        # if no features are rejected , returning importance_
+        if(0 in imp_history_rejected.shape):
+            if self.verbose > 0:
+                self._print_results(dec_reg, _iter, 1)
 
+            self.importance_ = imp_history[1:]
+            return self
         # update rank for not_selected features
         if not_selected.shape[0] > 0:
                 # calculate ranks in each iteration, then median of ranks across feats
