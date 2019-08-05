@@ -1,8 +1,26 @@
 # boruta_py #
 
-This project hosts Python implementations of the [Boruta all-relevant feature selection method](https://m2.icm.edu.pl/boruta/).
+[![License](https://img.shields.io/github/license/scikit-learn-contrib/boruta_py)](https://github.com/scikit-learn-contrib/boruta_py/blob/master/LICENSE)
+[![PyPI version](https://badge.fury.io/py/Boruta.svg)](https://badge.fury.io/py/Boruta)
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/boruta_py.svg)](https://anaconda.org/conda-forge/boruta_py)
 
-[Related blog post] (http://danielhomola.com/2015/05/08/borutapy-an-all-relevant-feature-selection-method/)
+This project hosts Python implementations of the [Boruta all-relevant feature selection method](https://www.jstatsoft.org/article/view/v036i11).
+
+[Related blog post](http://danielhomola.com/2015/05/08/borutapy-an-all-relevant-feature-selection-method/)
+
+## How to install ##
+
+Install with `pip`:
+
+```shell
+pip install Boruta
+```
+
+or with `conda`:
+
+```shell
+conda install -c conda-forge boruta_py
+```
 
 ## Dependencies ##
 
@@ -11,6 +29,7 @@ This project hosts Python implementations of the [Boruta all-relevant feature se
 * scikit-learn
 
 ## How to use ##
+
 Download, import and do as you would with any other scikit-learn method:
 * fit(X, y)
 * transform(X)
@@ -25,7 +44,7 @@ transform or fit_transform, to run the feature selection.
 
 For more, see the docs of these functions, and the examples below.
 
-Original code and method by: Miron B Kursa, https://m2.icm.edu.pl/boruta/
+Original code and method by: Miron B Kursa, https://notabug.org/mbq/Boruta
 
 Boruta is an all relevant feature selection method, while most other are
 minimal optimal; this means it tries to find all features carrying
