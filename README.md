@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/scikit-learn-contrib/boruta_py)](https://github.com/scikit-learn-contrib/boruta_py/blob/master/LICENSE)
 [![PyPI version](https://badge.fury.io/py/Boruta.svg)](https://badge.fury.io/py/Boruta)
-[![Conda Version](https://img.shields.io/conda/vn/conda-forge/boruta_py.svg)](https://anaconda.org/conda-forge/boruta_py)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/boruta_py/badges/version.svg)](https://anaconda.org/conda-forge/boruta_py)
 
 This project hosts Python implementations of the [Boruta all-relevant feature selection method](https://www.jstatsoft.org/article/view/v036i11).
 
@@ -44,7 +44,7 @@ transform or fit_transform, to run the feature selection.
 
 For more, see the docs of these functions, and the examples below.
 
-Original code and method by: Miron B Kursa, https://notabug.org/mbq/Boruta
+Original code and method by: Miron B. Kursa, https://notabug.org/mbq/Boruta
 
 Boruta is an all relevant feature selection method, while most other are
 minimal optimal; this means it tries to find all features carrying
