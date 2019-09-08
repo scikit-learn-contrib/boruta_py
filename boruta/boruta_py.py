@@ -279,7 +279,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
                 self.estimator.set_params(n_estimators=n_tree)
 
             # make sure we start with a new tree in each iteration
-            #self.estimator.set_params(random_state=self.random_state)
+            self.estimator.set_params(random_state=self.random_state.randint(0, 10000))
 
             # add shadow attributes, shuffle them and train estimator, get imps
             cur_imp = self._add_shadows_get_imps(X, y, dec_reg)
