@@ -249,7 +249,6 @@ class BorutaPy(BaseEstimator, TransformerMixin):
     def _fit(self, X, y):
         # check input params
         self._check_params(X, y)
-        self.random_state = self.random_state
         # setup variables for Boruta
         n_sample, n_feat = X.shape
         _iter = 1
@@ -279,7 +278,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
                 self.estimator.set_params(n_estimators=n_tree)
 
             # make sure we start with a new tree in each iteration
-            self.estimator.set_params(random_state=self.random_state)
+            #self.estimator.set_params(random_state=self.random_state)
 
             # add shadow attributes, shuffle them and train estimator, get imps
             cur_imp = self._add_shadows_get_imps(X, y, dec_reg)
@@ -384,7 +383,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             self.estimator.fit(X, y)
         except Exception as e:
             raise ValueError('Please check your X and y variable. The provided'
-                             'estimator cannot be fitted to your data.\n' + str(e))
+                             'estimator cannot be fitted to your data :-((\n' + str(e))
         try:
             imp = self.estimator.feature_importances_
         except Exception:
