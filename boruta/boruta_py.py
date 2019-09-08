@@ -249,7 +249,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
     def _fit(self, X, y):
         # check input params
         self._check_params(X, y)
-        self.random_state = check_random_state(self.random_state)
+        self.random_state = self.random_state
         # setup variables for Boruta
         n_sample, n_feat = X.shape
         _iter = 1
