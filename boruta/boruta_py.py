@@ -200,7 +200,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
 
         return self._fit(X, y)
 
-    def transform(self, X, weak=False):
+    def transform(self, X, weak=False, return_df=False):
         """
         Reduces the input X to the features selected by Boruta.
 
@@ -211,6 +211,10 @@ class BorutaPy(BaseEstimator, TransformerMixin):
 
         weak: boolean, default = False
             If set to true, the tentative features are also used to reduce X.
+        
+        return_df : boolean, default = False
+            If ``X`` if a pandas dataframe and this parameter is set to True,
+            the transformed data will also be a dataframe.
 
         Returns
         -------
@@ -219,9 +223,9 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             selected by Boruta.
         """
 
-        return self._transform(X, weak)
+        return self._transform(X, weak, return_df)
 
-    def fit_transform(self, X, y, weak=False):
+    def fit_transform(self, X, y, weak=False, return_df=False):
         """
         Fits Boruta, then reduces the input X to the selected features.
 
@@ -236,6 +240,10 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         weak: boolean, default = False
             If set to true, the tentative features are also used to reduce X.
 
+        return_df : boolean, default = False
+            If ``X`` if a pandas dataframe and this parameter is set to True,
+            the transformed data will also be a dataframe.
+
         Returns
         -------
         X : array-like, shape = [n_samples, n_features_]
@@ -244,11 +252,25 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         """
 
         self._fit(X, y)
-        return self._transform(X, weak)
+        return self._transform(X, weak, return_df)
+
+    def _validate_pandas_input(self, arg):
+        try:
+            return arg.values
+        except AttributeError:
+            raise ValueError(
+                "input needs to be a numpy array or pandas data frame."
+            )
 
     def _fit(self, X, y):
         # check input params
         self._check_params(X, y)
+
+        if not isinstance(X, np.ndarray):
+            X = self._validate_pandas_input(X) 
+        if not isinstance(y, np.ndarray):
+            y = self._validate_pandas_input(y)
+
         self.random_state = check_random_state(self.random_state)
         # setup variables for Boruta
         n_sample, n_feat = X.shape
@@ -355,7 +377,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             self._print_results(dec_reg, _iter, 1)
         return self
 
-    def _transform(self, X, weak=False):
+    def _transform(self, X, weak=False, return_df=False):
         # sanity check
         try:
             self.ranking_
@@ -363,9 +385,14 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             raise ValueError('You need to call the fit(X, y) method first.')
 
         if weak:
-            X = X[:, self.support_ + self.support_weak_]
+            indices = self.support_ + self.support_weak_
         else:
-            X = X[:, self.support_]
+            indices = self.support_
+
+        if return_df:
+            X = X.iloc[:, indices]
+        else:
+            X = X[:, indices]
         return X
 
     def _get_tree_num(self, n_feat):
