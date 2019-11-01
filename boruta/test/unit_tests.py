@@ -1,5 +1,6 @@
 import unittest
 from boruta import BorutaPy
+import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 import numpy as np
 
@@ -42,6 +43,13 @@ class BorutaTestCases(unittest.TestCase):
         # make sure that only all the relevant features are returned
         self.assertListEqual(list(range(5)), list(np.where(bt.support_)[0]))
 
+        # test if this works as expected for dataframe input
+        X_df, y_df = pd.DataFrame(X), pd.Series(y)
+        bt.fit(X_df, y_df)
+        self.assertListEqual(list(range(5)), list(np.where(bt.support_)[0]))
+
+        # check it dataframe is returned when return_df=True
+        self.assertIsInstance(bt.transform(X_df, return_df=True), pd.DataFrame)
 
 if __name__ == '__main__':
     unittest.main()
