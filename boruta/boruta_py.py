@@ -566,6 +566,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         # Boruta finished running and tentatives have been filtered
         else:
             n_tentative = np.sum(self.support_weak_)
+            n_rejected = np.sum(~(self.support_|self.support_weak_))
             content = map(str, [n_iter, n_confirmed, n_tentative, n_rejected])
             result = '\n'.join([x[0] + '\t' + x[1] for x in zip(cols, content)])
             output = "\n\nBorutaPy finished running.\n\n" + result
