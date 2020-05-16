@@ -542,15 +542,15 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         obj_feat = list(set(list(X_tr.columns)) - set(list(X_tr.select_dtypes(include=[np.number]))))
         obj_idx = None
 
-        # if obj_feat:
-        #     X_tr[obj_feat] = X_tr[obj_feat].astype('str').astype('category')
-        #     X_tt[obj_feat] = X_tt[obj_feat].astype('str').astype('category')
-        #     obj_idx = np.argwhere(X_tr.columns.isin(obj_feat)).ravel()
+        if obj_feat:
+            X_tr[obj_feat] = X_tr[obj_feat].astype('str').astype('category')
+            X_tt[obj_feat] = X_tt[obj_feat].astype('str').astype('category')
+            obj_idx = np.argwhere(X_tr.columns.isin(obj_feat)).ravel()
 
         if self._is_tree_based():
             try:
                 if self.is_cat:
-                    model = self.estimator.fit(X_tr, y_tr, sample_weight=w_tr, cat_features=obj_idx)
+                    model = self.estimator.fit(X_tr, y_tr, sample_weight=w_tr, cat_features=obj_feat)
                 else:
                     model = self.estimator.fit(X_tr, y_tr, sample_weight=w_tr)
 
@@ -607,7 +607,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
                 raise ValueError('Please check your X and y variable. The provided '
                                  'estimator cannot be fitted to your data.\n' + str(e))
 
-            perm_imp = permutation_importance(self.estimator, X_tt, y_tt, n_repeats=5, random_state=42, n_jobs=-1)
+            perm_imp = permutation_importance(model, X_tt, y_tt, n_repeats=5, random_state=42, n_jobs=-1)
             imp = perm_imp.importances_mean.ravel()
         else:
             raise ValueError('Not a tree based model')
