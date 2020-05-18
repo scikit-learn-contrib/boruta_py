@@ -267,8 +267,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
                              medianprops=dict(linestyle='-', linewidth=1.5),
                              whiskerprops=dict(linestyle='-', linewidth=1.5),
                              capprops=dict(linestyle='-', linewidth=1.5),
-                             showfliers=False, grid=True, rot=0, vert=False, patch_artist=True,
-                             figsize=(10, 3 * len(self.support_) / 10)
+                             showfliers=False, grid=True, rot=0, vert=False, patch_artist=True
                              )
 
         box_face_col = ["tab:blue"] * sum(self.support_) + ["#FDD023"] * sum(self.support_weak_)
@@ -276,13 +275,8 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             bp.findobj(matplotlib.patches.Patch)[len(self.support_) - c - 1].set_facecolor(box_face_col[c])
             bp.findobj(matplotlib.patches.Patch)[len(self.support_) - c - 1].set_facecolor(box_face_col[c])
 
-        # xt = bp.get_xticks()
-        # xt = np.round(np.append(xt, self.sha_max), 2)
-        # xtl = xt.tolist()
-        # xtl[-1] = "sha. max"
-        # bp.set_xticks(xt)
-        # bp.set_xticklabels(xtl)
-        bp.set_xlim(left=vimp_df.min(skipna=True).min(skipna=True))
+        xrange = vimp_df.max(skipna=True).max(skipna=True)-vimp_df.min(skipna=True).min(skipna=True)
+        bp.set_xlim(left=vimp_df.min(skipna=True).min(skipna=True)-0.10*xrange)
         custom_lines = [Line2D([0], [0], color="tab:blue", lw=5),
                         Line2D([0], [0], color="#FDD023", lw=5),
                         Line2D([0], [0], color="gray", lw=5),
@@ -290,7 +284,9 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         bp.legend(custom_lines, ['confirmed', 'tentative', 'rejected', 'sha. max'], loc="lower right")
         plt.axvline(x=self.sha_max, linestyle='--', color='gray')
         fig = bp.get_figure()
-        fig.suptitle('Boruta importance and selected predictors')
+        plt.title('Boruta importance and selected predictors')
+        fig.set_size_inches((10, 2 * np.rint(max(vimp_df.shape) / 10)))
+        plt.tight_layout()
         plt.show()
 
     def _is_catboost(self):
