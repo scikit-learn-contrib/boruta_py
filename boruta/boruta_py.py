@@ -292,6 +292,9 @@ class BorutaPy(BaseEstimator, TransformerMixin):
     def _is_catboost(self):
         self.is_cat = 'catboost' in str(type(self.estimator))
 
+    def _is_lightgbm(self):
+        self.is_lgb = 'lightgbm' in str(type(self.estimator))
+
     def _is_tree_based(self):
         """
         checking if the estimator is tree-based (kernel SAP is too slow to be used here, unless using sampling)
@@ -556,12 +559,20 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             # build the explainer
             explainer = shap.TreeExplainer(model, feature_perturbation="tree_path_dependent")
             shap_values = explainer.shap_values(X_tt)
-            # flatten to 2D if classification
+            # flatten to 2D if classification and lightgbm
             if is_classifier(self.estimator):
-                shap_values = np.array(shap_values)
-                shap_values = shap_values.reshape(-1, shap_values.shape[-1])
-
-            shap_imp = np.mean(np.abs(shap_values), axis=0)
+                if isinstance(shap_values, list):
+                    # for lightgbm clf sklearn, shap return list of arrays
+                    # https://github.com/slundberg/shap/issues/526
+                    class_inds = range(len(shap_values))
+                    shap_imp = np.zeros(shap_values[0].shape[1])
+                    for i, ind in enumerate(class_inds):
+                        shap_imp = np.abs(shap_values[ind]).mean(0)
+                    shap_imp /= len(shap_values)
+                else:
+                    shap_imp = np.abs(shap_values).mean(0)
+            else:
+                shap_imp = np.abs(shap_values).mean(0)
         else:
             raise ValueError('Not a tree based model')
 
