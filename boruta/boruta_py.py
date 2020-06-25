@@ -184,6 +184,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         self.max_iter = max_iter
         self.random_state = random_state
         self.verbose = verbose
+        self.__version__ = '0.3'
 
     def fit(self, X, y):
         """
