@@ -185,6 +185,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         self.random_state = random_state
         self.verbose = verbose
         self.__version__ = '0.3'
+        self._is_lightgbm()
 
     def fit(self, X, y):
         """
@@ -280,7 +281,10 @@ class BorutaPy(BaseEstimator, TransformerMixin):
                 self.estimator.set_params(n_estimators=n_tree)
 
             # make sure we start with a new tree in each iteration
-            self.estimator.set_params(random_state=self.random_state.randint(0, 10000))
+            if self.is_lgb:
+                self.estimator.set_params(random_state=self.random_state.randint(0, 10000))
+            else:
+                self.estimator.set_params(random_state=self.random_state)
 
             # add shadow attributes, shuffle them and train estimator, get imps
             cur_imp = self._add_shadows_get_imps(X, y, dec_reg)
@@ -544,3 +548,6 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             result = '\n'.join([x[0] + '\t' + x[1] for x in zip(cols, content)])
             output = "\n\nBorutaPy finished running.\n\n" + result
         print(output)
+
+    def _is_lightgbm(self):
+        self.is_lgb = 'lightgbm' in str(type(self.estimator))
