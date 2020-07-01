@@ -185,7 +185,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         self.random_state = random_state
         self.verbose = verbose
         self.__version__ = '0.3'
-        self._is_lightgbm()
+        self._is_lightgbm = 'lightgbm' in str(type(self.estimator))
 
     def fit(self, X, y):
         """
@@ -548,6 +548,3 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             result = '\n'.join([x[0] + '\t' + x[1] for x in zip(cols, content)])
             output = "\n\nBorutaPy finished running.\n\n" + result
         print(output)
-
-    def _is_lightgbm(self):
-        self.is_lgb = 'lightgbm' in str(type(self.estimator))
