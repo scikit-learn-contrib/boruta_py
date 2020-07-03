@@ -303,7 +303,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
                 self.estimator.set_params(n_estimators=n_tree)
 
             # make sure we start with a new tree in each iteration
-            if self.is_lgb:
+            if self._is_lightgbm:
                 self.estimator.set_params(random_state=self.random_state.randint(0, 10000))
             else:
                 self.estimator.set_params(random_state=self.random_state)
