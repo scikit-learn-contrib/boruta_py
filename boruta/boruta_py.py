@@ -13,6 +13,7 @@ import numpy as np
 import scipy as sp
 from sklearn.utils import check_random_state, check_X_y
 from sklearn.base import TransformerMixin, BaseEstimator
+import warning
 
 
 class BorutaPy(BaseEstimator, TransformerMixin):
@@ -401,7 +402,12 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         return X
 
     def _get_tree_num(self, n_feat):
-        depth = self.estimator.get_params()['max_depth']
+        depth = None
+        try:
+            depth = self.estimator.get_params()['max_depth']
+        except KeyError:
+            warning.warn("The estimator does not have a max_depth property, "
+                         "as a result the number of trees to use cannot be estimated automatically.")
         if depth == None:
             depth = 10
         # how many times a feature should be considered on average
