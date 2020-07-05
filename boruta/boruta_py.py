@@ -406,8 +406,10 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         try:
             depth = self.estimator.get_params()['max_depth']
         except KeyError:
-            warnings.warn("The estimator does not have a max_depth property, "
-                         "as a result the number of trees to use cannot be estimated automatically.")
+            warnings.warn(
+                "The estimator does not have a max_depth property, as a result "
+                " the number of trees to use cannot be estimated automatically."
+            )
         if depth == None:
             depth = 10
         # how many times a feature should be considered on average
