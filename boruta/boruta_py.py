@@ -17,7 +17,8 @@ import time
 import matplotlib
 import matplotlib.pyplot as plt
 from sklearn.utils import check_random_state, check_X_y
-from sklearn.base import TransformerMixin, BaseEstimator, is_classifier, is_regressor
+from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.base import is_classifier, is_regressor
 from sklearn.model_selection import RepeatedKFold, train_test_split
 from sklearn.inspection import permutation_importance
 from matplotlib.lines import Line2D
@@ -176,15 +177,14 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         self.importance = importance
         self.cat_name = None
         self.cat_idx = None
-        # Catboost doesn't allow to change random seed after fitting
-        self._is_catboost = 'catboost' in str(type(self.estimator))
-        # Random state throws an error with lightgbm
-        self._is_lightgbm = 'lightgbm' in str(type(self.estimator))
         # plotting
         self.imp_real_hist = None
         self.sha_max = None
         self.col_names = None
-        self.__version__ = '0.3'
+        # Catboost doesn't allow to change random seed after fitting
+        self._is_catboost = 'catboost' in str(type(self.estimator))
+        # Random state throws an error with lightgbm
+        self._is_lightgbm = 'lightgbm' in str(type(self.estimator))
 
     def fit(self, X, y):
         """
