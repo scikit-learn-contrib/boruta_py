@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Author: Daniel Homola <dani.homola@gmail.com>
+
+Original code and method by: Miron B Kursa, https://m2.icm.edu.pl/boruta/
+
+License: BSD 3 clause
+"""
+
 from __future__ import print_function, division
 import numpy as np
 import scipy as sp
@@ -11,16 +21,6 @@ from sklearn.base import TransformerMixin, BaseEstimator, is_classifier, is_regr
 from sklearn.model_selection import RepeatedKFold, train_test_split
 from sklearn.inspection import permutation_importance
 from matplotlib.lines import Line2D
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-Author: Daniel Homola <dani.homola@gmail.com>
-
-Original code and method by: Miron B Kursa, https://m2.icm.edu.pl/boruta/
-
-License: BSD 3 clause
-"""
-
 
 
 class BorutaPy(BaseEstimator, TransformerMixin):
@@ -171,20 +171,20 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         self.two_step = two_step
         self.max_iter = max_iter
         self.random_state = random_state
-        self.random_state_instance = None
         self.verbose = verbose
         self.weight = weight
         self.importance = importance
         self.cat_name = None
         self.cat_idx = None
         # Catboost doesn't allow to change random seed after fitting
-        self.is_cat = 'catboost' in str(type(self.estimator))
+        self._is_catboost = 'catboost' in str(type(self.estimator))
         # Random state throws an error with lightgbm
-        self.is_lgb = 'lightgbm' in str(type(self.estimator))
+        self._is_lightgbm = 'lightgbm' in str(type(self.estimator))
         # plotting
         self.imp_real_hist = None
         self.sha_max = None
         self.col_names = None
+        self.__version__ = '0.3'
 
     def fit(self, X, y):
         """
@@ -322,7 +322,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             # a way without loop but need to re-do astype
             Cat = X_raw[cat_feat].stack().astype('category').cat.codes.unstack()
 
-        if not self.is_cat:
+        if not self._is_catboost:
             if cat_feat:
                 X = pd.concat([X_raw[X_raw.columns.difference(cat_feat)], Cat], axis=1)
             else:
@@ -377,7 +377,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
 
             # make sure we start with a new tree in each iteration
             # Catboost doesn't allow to change random seed after fitting
-            if not self.is_cat:
+            if not self._is_catboost:
                 if self._is_lightgbm:
                     # https://github.com/scikit-learn-contrib/boruta_py/pull/78
                     self.estimator.set_params(random_state=self.random_state.randint(0, 10000))
@@ -499,7 +499,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
 
     def _get_imp(self, X, y):
         try:
-            if self.is_cat:
+            if self._is_catboost:
                 X = pd.DataFrame(X)
                 obj_feat = X.dtypes.loc[(X.dtypes == 'object') | (X.dtypes == 'category')].index.tolist()
                 if obj_feat:
@@ -546,7 +546,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
 
         if self._is_tree_based():
             try:
-                if self.is_cat:
+                if self._is_catboost:
                     model = self.estimator.fit(X_tr, y_tr, sample_weight=w_tr, cat_features=obj_feat)
                 else:
                     model = self.estimator.fit(X_tr, y_tr, sample_weight=w_tr)
@@ -603,7 +603,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
 
         if self._is_tree_based():
             try:
-                if self.is_cat:
+                if self._is_catboost:
                     model = self.estimator.fit(X_tr, y_tr, sample_weight=w_tr, cat_features=obj_feat)
                 else:
                     model = self.estimator.fit(X_tr, y_tr, sample_weight=w_tr)
