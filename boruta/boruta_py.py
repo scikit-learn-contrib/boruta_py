@@ -22,6 +22,7 @@ from sklearn.base import is_classifier, is_regressor
 from sklearn.model_selection import RepeatedKFold, train_test_split
 from sklearn.inspection import permutation_importance
 from matplotlib.lines import Line2D
+import warnings
 
 
 class BorutaPy(BaseEstimator, TransformerMixin):
