@@ -1,17 +1,15 @@
 from __future__ import print_function, division
 import numpy as np
 import scipy as sp
-from sklearn.utils import check_random_state, check_X_y
-from sklearn.base import TransformerMixin, BaseEstimator, is_classifier, is_regressor
-from sklearn.utils import check_random_state, check_X_y
-from sklearn.base import TransformerMixin, BaseEstimator, is_regressor, is_classifier
-from sklearn.model_selection import RepeatedKFold, train_test_split
-from sklearn.inspection import permutation_importance
 import shap
 import pandas as pd
 import time
 import matplotlib
 import matplotlib.pyplot as plt
+from sklearn.utils import check_random_state, check_X_y
+from sklearn.base import TransformerMixin, BaseEstimator, is_classifier, is_regressor
+from sklearn.model_selection import RepeatedKFold, train_test_split
+from sklearn.inspection import permutation_importance
 from matplotlib.lines import Line2D
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -180,7 +178,9 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         self.cat_name = None
         self.cat_idx = None
         # Catboost doesn't allow to change random seed after fitting
-        self.is_cat = False
+        self.is_cat = 'catboost' in str(type(self.estimator))
+        # Random state throws an error with lightgbm
+        self.is_lgb = 'lightgbm' in str(type(self.estimator))
         # plotting
         self.imp_real_hist = None
         self.sha_max = None
@@ -289,12 +289,6 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         plt.tight_layout()
         plt.show()
 
-    def _is_catboost(self):
-        self.is_cat = 'catboost' in str(type(self.estimator))
-
-    def _is_lightgbm(self):
-        self.is_lgb = 'lightgbm' in str(type(self.estimator))
-
     def _is_tree_based(self):
         """
         checking if the estimator is tree-based (kernel SAP is too slow to be used here, unless using sampling)
@@ -313,7 +307,6 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             )
 
     def _fit(self, X_raw, y):
-        self._is_catboost()
 
         start_time = time.time()
         # basic cat features encoding
@@ -329,7 +322,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             # a way without loop but need to re-do astype
             Cat = X_raw[cat_feat].stack().astype('category').cat.codes.unstack()
 
-        if self.is_cat is False:
+        if not self.is_cat:
             if cat_feat:
                 X = pd.concat([X_raw[X_raw.columns.difference(cat_feat)], Cat], axis=1)
             else:
@@ -353,7 +346,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         if not isinstance(y, np.ndarray):
             y = self._validate_pandas_input(y)
 
-        self.random_state_instance = check_random_state(self.random_state)
+        self.random_state = check_random_state(self.random_state)
         # setup variables for Boruta
         n_sample, n_feat = X.shape
         _iter = 1
@@ -384,8 +377,13 @@ class BorutaPy(BaseEstimator, TransformerMixin):
 
             # make sure we start with a new tree in each iteration
             # Catboost doesn't allow to change random seed after fitting
-            if self.is_cat is False:
-                self.estimator.set_params(random_state=self.random_state)
+            if not self.is_cat:
+                if self._is_lightgbm:
+                    # https://github.com/scikit-learn-contrib/boruta_py/pull/78
+                    self.estimator.set_params(random_state=self.random_state.randint(0, 10000))
+                else:
+                    self.estimator.set_params(random_state=self.random_state)
+
 
             # add shadow attributes, shuffle them and train estimator, get imps
             cur_imp = self._add_shadows_get_imps(X, y, dec_reg)
@@ -522,7 +520,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         return imp
 
     def _get_shap_imp(self, X, y):
-
+        # SHAP and permutation importances must be computed on unseen data
         if self.weight is not None:
             w = self.weight
             if is_regressor(self.estimator):
@@ -562,12 +560,12 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             # flatten to 2D if classification and lightgbm
             if is_classifier(self.estimator):
                 if isinstance(shap_values, list):
-                    # for lightgbm clf sklearn, shap return list of arrays
+                    # for lightgbm clf sklearn api, shap returns list of arrays
                     # https://github.com/slundberg/shap/issues/526
                     class_inds = range(len(shap_values))
                     shap_imp = np.zeros(shap_values[0].shape[1])
                     for i, ind in enumerate(class_inds):
-                        shap_imp = np.abs(shap_values[ind]).mean(0)
+                        shap_imp += np.abs(shap_values[ind]).mean(0)
                     shap_imp /= len(shap_values)
                 else:
                     shap_imp = np.abs(shap_values).mean(0)
@@ -622,7 +620,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         return imp
 
     def _get_shuffle(self, seq):
-        self.random_state_instance.shuffle(seq)
+        self.random_state.shuffle(seq)
         return seq
 
     def _add_shadows_get_imps(self, X, y, dec_reg):
