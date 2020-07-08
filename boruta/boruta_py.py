@@ -186,6 +186,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         self._is_catboost = 'catboost' in str(type(self.estimator))
         # Random state throws an error with lightgbm
         self._is_lightgbm = 'lightgbm' in str(type(self.estimator))
+        self.__version__ = '0.3'
 
     def fit(self, X, y):
         """
@@ -385,7 +386,6 @@ class BorutaPy(BaseEstimator, TransformerMixin):
                 else:
                     self.estimator.set_params(random_state=self.random_state)
 
-
             # add shadow attributes, shuffle them and train estimator, get imps
             cur_imp = self._add_shadows_get_imps(X, y, dec_reg)
 
@@ -488,7 +488,14 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         return X
 
     def _get_tree_num(self, n_feat):
-        depth = self.estimator.get_params()['max_depth']
+        depth = None
+        try:
+            depth = self.estimator.get_params()['max_depth']
+        except KeyError:
+            warnings.warn(
+                "The estimator does not have a max_depth property, as a result "
+                " the number of trees to use cannot be estimated automatically."
+            )
         if depth == None:
             depth = 10
         # how many times a feature should be considered on average
@@ -772,6 +779,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         # Boruta finished running and tentatives have been filtered
         else:
             n_tentative = np.sum(self.support_weak_)
+            n_rejected = np.sum(~(self.support_|self.support_weak_))
             content = map(str, [n_iter, n_confirmed, n_tentative, n_rejected])
             result = '\n'.join([x[0] + '\t' + x[1] for x in zip(cols, content)])
             if self.importance in ['shap', 'pimp']:
