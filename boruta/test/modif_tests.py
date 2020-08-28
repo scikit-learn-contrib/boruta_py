@@ -92,7 +92,9 @@ def get_titanic_data():
     X = pd.DataFrame(X_trans, columns = X.columns)
     # encode
     X, cat_var_df, inv_mapper = cat_var(X)
-    return X, y
+    # sample weight is just a dummy random vector for testing purpose
+    sample_weight = np.random.uniform(0,1, len(y))
+    return X, y, sample_weight
 
 def get_boston_data():
     boston = load_boston()
@@ -103,23 +105,23 @@ def get_boston_data():
     return X, y
 
 # Testing the changes with rnd cat. and num. predictors added to the set of genuine predictors
-def testing_estimators(varimp, models, X, y):
+def testing_estimators(varimp, models, X, y, sample_weight=None):
     for model in models:
-        print('testing ' + str(type(model)) + ' for var.imp: ' + varimp)
-        feat_selector = bp(model, n_estimators = 100, verbose= 1, max_iter= 10, random_state=42, weight=None, importance=varimp)
-        feat_selector.fit(X, y)
+        print('='*20 +' testing: {mod:>55} for var.imp: {vimp:<15} '.format(mod=str(model), vimp=varimp)+'='*20 )
+        feat_selector = noglmgroot.BorutaPy(model, n_estimators = 100, verbose= 1, max_iter= 10, random_state=42, weight=None, importance=varimp)
+        feat_selector.fit(X, y, sample_weight)
         print(feat_selector.support_names_)
-        feat_selector.plot_importance()
+        feat_selector.plot_importance(n_feat_per_inch=3)
         gc.enable()
         del(feat_selector, model)
         gc.collect()
 
-def testing_clf_all_varimp(X, y):
+def testing_clf_all_varimp(X, y, sample_weight=None):
     for varimp in ['shap', 'pimp', 'native']:
-        models = [catboost.CatBoostClassifier(random_state=42, verbose=0), XGBClassifier(random_state=42, verbose=0), LGBMClassifier(random_state=42, verbose=0)]
-        testing_estimators(varimp=varimp, models=models, X=X, y=y)
+        models = [RandomForestClassifier(n_jobs= 4, oob_score= True), catboost.CatBoostClassifier(random_state=42, verbose=0), XGBClassifier(random_state=42, verbose=0), LGBMClassifier(random_state=42, verbose=0)]
+        testing_estimators(varimp=varimp, models=models, X=X, y=y, sample_weight=sample_weight)
         gc.enable()
-        del(models)
+        del models
         gc.collect()
 
 def testing_regr_all_varimp(X, y):
@@ -129,13 +131,13 @@ def testing_regr_all_varimp(X, y):
         gc.enable()
         del(models)
         gc.collect()
-        
 
-X, y = get_titanic_data()
-X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=42)
+print('='*20 + ' Benchmarking using sklearn permutation importance ' + '='*20 )
+X, y, sample_weight = get_titanic_data()
+X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(X, y, sample_weight, stratify=y, random_state=42)
 # lightgbm faster and better than RF
 lgb_model = LGBMClassifier(n_jobs= 4)
-lgb_model.fit(X_train, y_train)
+lgb_model.fit(X_train, y_train, sample_weight=w_train)
 result = permutation_importance(lgb_model, X_test, y_test, n_repeats=10, random_state=42, n_jobs=2)
 sorted_idx = result.importances_mean.argsort()
 # Plot
@@ -146,9 +148,10 @@ fig.tight_layout()
 plt.show()
 
 if __name__ == '__main__':
-    # classification and cat. pred
-    X, y = get_titanic_data()
-    testing_clf_all_varimp(X=X, y=y)
+    # classification and cat. pred, sample weight is just a dummy random vector for testing purpose
+    X, y, sample_weight = get_titanic_data() #get_titanic_data()
+    testing_clf_all_varimp(X=X, y=y, sample_weight=sample_weight)
+
     # regression
     X, y = get_boston_data()
     testing_regr_all_varimp(X=X, y=y)
