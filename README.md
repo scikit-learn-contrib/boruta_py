@@ -74,6 +74,8 @@ Some improvements include:
 
 * Ranking of features
 
+* Feature importances are derived from Gini impurity instead of RandomForest R package's MDA. 
+
 For more details, please check the top of the docstring.
 
 We highly recommend using pruned trees with a depth between 3-7.
