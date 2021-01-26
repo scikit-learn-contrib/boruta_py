@@ -180,13 +180,15 @@ class BorutaPy(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, estimator, n_estimators=1000, perc=100, alpha=0.05,
-                 two_step=True, max_iter=100, random_state=None, verbose=0):
+                 two_step=True, max_iter=100, n_features_to_select=None,
+                 random_state=None, verbose=0):
         self.estimator = estimator
         self.n_estimators = n_estimators
         self.perc = perc
         self.alpha = alpha
         self.two_step = two_step
         self.max_iter = max_iter
+        self.n_features_to_select = n_features_to_select
         self.random_state = random_state
         self.verbose = verbose
         self.__version__ = '0.3'
@@ -383,6 +385,14 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             self.support_ = np.ones(n_feat, dtype=np.bool)
 
         self.importance_history_ = imp_history
+
+        if self.n_features_to_select is not None:
+            assert type(self.n_features_to_select) == int
+            self.support_strong_ = self.support_.copy()
+            self.support_ = self._select_n_features(
+                self.n_features_to_select,
+                self.importance_history_
+            )
 
         # notify user
         if self.verbose > 0:
@@ -590,3 +600,17 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             result = '\n'.join([x[0] + '\t' + x[1] for x in zip(cols, content)])
             output = "\n\nBorutaPy finished running.\n\n" + result
         print(output)
+
+    def _select_n_features(self, n_features_to_select, importance_history_):
+        # fetch faeture importances of last trained ensemble
+        # -1 -encoded features were already rejected
+        feature_importance = np.nan_to_num(importance_history_[-1], nan=-1.)
+        selected_features = feature_importance.argsort()[-n_features_to_select:]
+
+        support = np.zeros_like(feature_importance, dtype=bool)
+        support[selected_features] = True
+
+        # ensure rejected features are not selected
+        support = ((feature_importance != -1) & support)
+
+        return support
