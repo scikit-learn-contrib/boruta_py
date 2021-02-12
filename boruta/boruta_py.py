@@ -1,3 +1,20 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Author: Daniel Homola <dani.homola@gmail.com>
+Original code and method by: Miron B Kursa, https://m2.icm.edu.pl/boruta/
+License: BSD 3 clause
+"""
+
+from __future__ import print_function, division
+import numpy as np
+import scipy as sp
+from sklearn.utils import check_random_state, check_X_y
+from sklearn.base import TransformerMixin, BaseEstimator
+import warnings
+
+
+
 class BorutaPy(BaseEstimator, TransformerMixin):
     """
     Improved Python implementation of the Boruta R package.
