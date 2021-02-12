@@ -1,20 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-Author: Daniel Homola <dani.homola@gmail.com>
-Original code and method by: Miron B Kursa, https://m2.icm.edu.pl/boruta/
-License: BSD 3 clause
-"""
-
-from __future__ import print_function, division
-import numpy as np
-import scipy as sp
-from sklearn.utils import check_random_state, check_X_y
-from sklearn.base import TransformerMixin, BaseEstimator
-import warnings
-
-
-
 class BorutaPy(BaseEstimator, TransformerMixin):
     """
     Improved Python implementation of the Boruta R package.
@@ -159,10 +142,6 @@ class BorutaPy(BaseEstimator, TransformerMixin):
     tag_df : dataframe
         the df with the details (accepted or rejected) of the feature selection
 
-
-    importance_history_ : array-like, shape [n_features, n_iters]
-
-        The calculated importance values for each feature across all iterations.  
 
     Examples
     --------
@@ -574,8 +553,6 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         else:
             # all are selected, thus we set feature supports to True
             self.support_ = np.ones(n_feat, dtype=np.bool)
-
-        self.importance_history_ = imp_history
 
         # notify user
         if self.verbose > 0:
