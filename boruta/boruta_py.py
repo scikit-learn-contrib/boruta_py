@@ -117,13 +117,13 @@ class BorutaPy(BaseEstimator, TransformerMixin):
     early_stopping : bool, default = False
         Whether to use early stopping to terminate the selection process
         before reaching `max_iter` iterations if the algorithm cannot
-        confirm a tenative feature for `n_iter_no_change` iterations.
+        confirm a tentative feature for `n_iter_no_change` iterations.
         Will speed up the process at a cost of a possibility of a
         worse result.
         
     n_iter_no_change : int, default = 20
         Ignored if `early_stopping` is False. The maximum amount of
-        iterations without confirming a tenative feature. 
+        iterations without confirming a tentative feature. 
 
     Attributes
     ----------
