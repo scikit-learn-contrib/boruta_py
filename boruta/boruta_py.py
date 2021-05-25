@@ -366,6 +366,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             # based on hit_reg we check if a feature is doing better than
             # expected by chance
             dec_reg = self._do_tests(dec_reg, hit_reg, _iter)
+            print(f"{dec_reg}")
 
             # print out confirmed features
             if self.verbose > 0 and _iter < self.max_iter:

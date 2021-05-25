@@ -96,17 +96,16 @@ class BorutaTestCases(unittest.TestCase):
         # check it dataframe is returned when return_df=True
         self.assertIsInstance(bt.transform(X_df, return_df=True), pd.DataFrame)
 
-    def test_xgboost_version(self):
+    def test_xgboost_default(self):
         np.random.seed(42)
         X, y = create_data()
 
-        bst = xgb.XGBRFRegressor(tree_method="hist", max_depth=5, n_estimators=10)
+        bst = xgb.XGBRFRegressor(**xgboost_parameters)
         bt = BorutaPy(bst, n_estimators=bst.n_estimators)
         bt.fit(X, y)
 
-        explainer = shap.TreeExplainer(bst)
-        shap_values = explainer.shap_values(X)
-        self.assertEqual(shap_values.shape, X.shape)
+        # make sure that only all the relevant features are returned
+        self.assertListEqual(list(range(5)), list(np.where(bt.support_)[0]))
 
     def test_xgboost_shapley(self):
         np.random.seed(42)
