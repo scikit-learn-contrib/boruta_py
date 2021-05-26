@@ -27,22 +27,31 @@ xgboost_parameters = {
 
 class Learner:
 
-    def __init__(self, estimator):
-        self.estimator = estimator
-        self.explainer = None
+    def __init__(self, params, nrounds=1000, verbose=False):
+        self.params = params
+        self.nrounds = nrounds
         self.feature_importances_ = None
+        self.verbose = verbose
 
-    def set_params(self, n_estimators=1000, random_state=None):
+    def set_params(self, n_estimators=None, random_state=None):
+        """
+        used by boruta_py but essentially useless in the case of xgboost.
+        :param n_estimators: the number of rounds, typically hard set in xgboost
+        :param random_state: ignored
+        """
         self.feature_importances_ = None
-        self.estimator.set_params(n_estimators=n_estimators, random_state=random_state)
+        if n_estimators:
+            self.nrounds = n_estimators
 
     def get_params(self):
-        return self.estimator.get_params()
+        return self.params
 
     def fit(self, X, y):
-        self.estimator.fit(X, y)
-        self.explainer = shap.TreeExplainer(self.estimator)
-        self.feature_importances_ = np.absolute(self.explainer.shap_values(X)).sum(axis=0)
+        dtrain = xgb.DMatrix(X, label=y)
+        eval_set = [(dtrain, 'test')]
+        model = xgb.train(self.params, dtrain, num_boost_round=self.nrounds, evals=eval_set, verbose_eval=self.verbose)
+        explainer = shap.TreeExplainer(model)
+        self.feature_importances_ = np.absolute(explainer.shap_values(X)).sum(axis=0)
 
 
 def create_data():
@@ -96,18 +105,18 @@ class BorutaTestCases(unittest.TestCase):
         # check it dataframe is returned when return_df=True
         self.assertIsInstance(bt.transform(X_df, return_df=True), pd.DataFrame)
 
-    def test_xgboost_default(self):
+    def test_xgboost_all_features(self):
         np.random.seed(42)
         X, y = create_data()
 
-        bst = xgb.XGBRFRegressor(**xgboost_parameters)
-        bt = BorutaPy(bst, n_estimators=bst.n_estimators)
+        bst = Learner(xgboost_parameters, nrounds=10)
+        bt = BorutaPy(bst, n_estimators=bst.nrounds, verbose=True)
         bt.fit(X, y)
 
         # make sure that only all the relevant features are returned
         self.assertListEqual(list(range(5)), list(np.where(bt.support_)[0]))
 
-    def test_xgboost_shapley(self):
+    def test_xgboost_some_features(self):
         np.random.seed(42)
 
         #  training data
@@ -116,10 +125,10 @@ class BorutaTestCases(unittest.TestCase):
         T = X[:, 3:]  # features to test -- only the first two in T should turn out to be important
 
         # Learner
-        bst = Learner(xgb.XGBRFRegressor(**xgboost_parameters, n_estimators=10))
+        bst = Learner(xgboost_parameters, nrounds=25)
 
         # Boruta
-        bt = BorutaPy(bst, n_estimators=bst.get_params()['n_estimators'])
+        bt = BorutaPy(bst, n_estimators=bst.nrounds, max_iter=10, verbose=True)
         bt.fit(T, y, C)
 
         self.assertListEqual(list(range(2)), list(np.where(bt.support_)[0]))

@@ -9,8 +9,6 @@ License: BSD 3 clause
 """
 
 from __future__ import print_function, division
-
-
 import numpy as np
 import scipy as sp
 from sklearn.utils import check_random_state, check_X_y
@@ -323,12 +321,12 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         # 0  - default state = tentative in original code
         # 1  - accepted in original code
         # -1 - rejected in original code
-        dec_reg = np.zeros(n_feat, dtype=np.int)
+        dec_reg = np.zeros(n_feat, dtype=int)
         # counts how many times a given feature was more important than
         # the best of the shadow features
-        hit_reg = np.zeros(n_feat, dtype=np.int)
+        hit_reg = np.zeros(n_feat, dtype=int)
         # these record the history of the iterations
-        imp_history = np.zeros(n_feat, dtype=np.float)
+        imp_history = np.zeros(n_feat, dtype=float)
         sha_max_history = []
 
         # set n_estimators
@@ -366,7 +364,6 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             # based on hit_reg we check if a feature is doing better than
             # expected by chance
             dec_reg = self._do_tests(dec_reg, hit_reg, _iter)
-            print(f"{dec_reg}")
 
             # print out confirmed features
             if self.verbose > 0 and _iter < self.max_iter:
@@ -401,13 +398,13 @@ class BorutaPy(BaseEstimator, TransformerMixin):
 
         # basic result variables
         self.n_features_ = confirmed.shape[0]
-        self.support_ = np.zeros(n_feat, dtype=np.bool)
+        self.support_ = np.zeros(n_feat, dtype=bool)
         self.support_[confirmed] = 1
-        self.support_weak_ = np.zeros(n_feat, dtype=np.bool)
+        self.support_weak_ = np.zeros(n_feat, dtype=bool)
         self.support_weak_[tentative] = 1
 
         # ranking, confirmed variables are rank 1
-        self.ranking_ = np.ones(n_feat, dtype=np.int)
+        self.ranking_ = np.ones(n_feat, dtype=int)
         # tentative variables are rank 2
         self.ranking_[tentative] = 2
         # selected = confirmed and tentative
@@ -433,7 +430,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
                 self.ranking_[not_selected] = ranks
         else:
             # all are selected, thus we set feature supports to True
-            self.support_ = np.ones(n_feat, dtype=np.bool)
+            self.support_ = np.ones(n_feat, dtype=bool)
 
         self.importance_history_ = imp_history
 
