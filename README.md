@@ -118,6 +118,17 @@ deviding the p-value threshold with the current iteration index.
 If this two step correction is not required, the two_step parameter has to be
 set to False, then (with perc=100) BorutaPy behaves exactly as the R version.
 
+
+## Differences with the original Boruta scheme ##
+
+   - Allow using sample_weight, for applications like Poisson regression or
+       any requiring weights
+   - 3 different feature importances: native, SHAP (if installed) and permutation.
+       Native being the least consistent
+       (because of the imp. biased towards numerical and large cardinality categorical, 
+       see [Beware Default Random Forest Importances](https://explained.ai/rf-importance/#5)
+       but the fastest of the 3.
+
 ## Parameters ##
 
 __estimator__ : object
@@ -203,6 +214,7 @@ __verbose__ : int, default=0
     
     # call transform() on X to filter it down to selected features
     X_filtered = feat_selector.transform(X)
+    
 
 ## References ##
 

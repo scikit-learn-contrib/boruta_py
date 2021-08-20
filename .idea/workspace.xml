@@ -2,14 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="86965c5f-b3bf-49b3-9749-e110efd2b609" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/boruta_py.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/boruta_py.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boruta/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/boruta/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boruta/boruta_py.py" beforeDir="false" afterPath="$PROJECT_DIR$/boruta/boruta_py.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boruta/examples/.ipynb_checkpoints/Madalon_Data_Set-checkpoint.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/boruta/examples/.ipynb_checkpoints/Madalon_Data_Set-checkpoint.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/boruta/examples/Madalon_Data_Set.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/boruta/examples/Madalon_Data_Set.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
