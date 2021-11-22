@@ -44,7 +44,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
     - Automatic tree number:
         Setting the n_estimator to 'auto' will calculate the number of trees
         in each itartion based on the number of features under investigation.
-        This way more trees are used when the training data has many feautres
+        This way more trees are used when the training data has many features
         and less when most of the features have been rejected.
     - Ranking of features:
         After fitting BorutaPy it provides the user with ranking of features.
