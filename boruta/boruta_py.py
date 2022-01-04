@@ -1217,7 +1217,15 @@ def _get_shap_imp(estimator, X, y, sample_weight=None, cat_feature=None):
     if is_lightgbm(estimator):
         shap_matrix = model.predict(X_tt, pred_contrib=True)
         # the dim changed in lightGBM 3
-        shap_imp = np.mean(np.abs(shap_matrix[:, :-1]), axis=0)
+        # X_SHAP_values array-like of shape = [n_samples, n_features + 1] or 
+        # shape = [n_samples, (n_features + 1) * n_classes] or list with n_classes length of such objects
+        if is_classifier(estimator):
+            # remove every (n_features+1)th element, python indexes from zero
+            n_features = X_tt.shape[1]
+            shap_imp = np.mean(np.abs(shap_matrix[:, np.mod(np.arange(shap_matrix.shape[1]), n_features)!=0]))
+        else:
+            shap_imp = np.mean(np.abs(shap_matrix[:, :-1]), axis=0)
+        
     else:
         # build the explainer
         explainer = shap.TreeExplainer(model, feature_perturbation="tree_path_dependent")
