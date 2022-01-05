@@ -1222,7 +1222,7 @@ def _get_shap_imp(estimator, X, y, sample_weight=None, cat_feature=None):
         if is_classifier(estimator):
             # remove every (n_features+1)th element, python indexes from zero
             n_features = X_tt.shape[1]
-            shap_matrix = np.delete(shap_matrix, list(range(n_features, shap_matrix.shape[1], n_features)), axis=1)
+            shap_matrix = np.delete(shap_matrix, list(range(n_features, shap_matrix.shape[1], n_features+1)), axis=1)
             shap_imp = np.mean(np.abs(shap_matrix), axis=0)
         else:
             shap_imp = np.mean(np.abs(shap_matrix[:, :-1]), axis=0)
