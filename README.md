@@ -113,7 +113,7 @@ reason the first step of correction is the widely used Benjamini Hochberg FDR.
 Following that however we also need to account for the fact that we have been
 testing the same features over and over again in each iteration with the
 same test. For this scenario the Bonferroni is perfect, so it is applied by
-deviding the p-value threshold with the current iteration index.
+dividing the p-value threshold with the current iteration index.
 
 If this two step correction is not required, the two_step parameter has to be
 set to False, then (with perc=100) BorutaPy behaves exactly as the R version.
@@ -129,12 +129,12 @@ __n_estimators__ : int or string, default = 1000
    > If int sets the number of estimators in the chosen ensemble method.
    > If 'auto' this is determined automatically based on the size of the
    > dataset. The other parameters of the used estimators need to be set
-   > with initialisation.
+   > with initialization.
 
 __perc__ : int, default = 100
    > Instead of the max we use the percentile defined by the user, to pick
    > our threshold for comparison between shadow and real features. The max
-   > tend to be too stringent. This provides a finer control over this. The
+   > tends to be too stringent. This provides a finer control over this. The
    > lower perc is the more false positives will be picked as relevant but
    > also the less relevant features will be left out. The usual trade-off.
    > The default is essentially the vanilla Boruta corresponding to the max.
@@ -186,7 +186,7 @@ X = pd.read_csv('examples/test_X.csv', index_col=0).values
 y = pd.read_csv('examples/test_y.csv', header=None, index_col=0).values
 y = y.ravel()
 
-# define random forest classifier, with utilising all cores and
+# define random forest classifier, with utilizing all cores and
 # sampling in proportion to y labels
 rf = RandomForestClassifier(n_jobs=-1, class_weight='balanced', max_depth=5)
 
