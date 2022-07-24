@@ -129,7 +129,7 @@ __n_estimators__ : int or string, default = 1000
    > If int sets the number of estimators in the chosen ensemble method.
    > If 'auto' this is determined automatically based on the size of the
    > dataset. The other parameters of the used estimators need to be set
-   > with initialization.
+   > with initialisation.
 
 __perc__ : int, default = 100
    > Instead of the max we use the percentile defined by the user, to pick
@@ -186,7 +186,7 @@ X = pd.read_csv('examples/test_X.csv', index_col=0).values
 y = pd.read_csv('examples/test_y.csv', header=None, index_col=0).values
 y = y.ravel()
 
-# define random forest classifier, with utilizing all cores and
+# define random forest classifier, with utilising all cores and
 # sampling in proportion to y labels
 rf = RandomForestClassifier(n_jobs=-1, class_weight='balanced', max_depth=5)
 
