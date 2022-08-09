@@ -15,5 +15,8 @@ setup(name='Boruta',
       keywords=['feature selection', 'machine learning', 'random forest'],
       install_requires=['numpy>=1.10.4',
                         'scikit-learn>=0.17.1',
-                        'scipy>=0.17.0'
+                        'scipy>=0.17.0',
+                        'pandas',
+                        'matplotlib',
+                        'tqdm'
                         ])
