@@ -6,7 +6,8 @@
 
 This project hosts Python implementations of the [Boruta all-relevant feature selection method](https://www.jstatsoft.org/article/view/v036i11).
 
-[Related blog post](http://danielhomola.com/2015/05/08/borutapy-an-all-relevant-feature-selection-method/)
+[Related blog post](https://danielhomola.com/feature%20selection/phd/borutapy-an-all-relevant-feature-selection-method/)
+
 
 ## How to install ##
 
@@ -73,6 +74,8 @@ Some improvements include:
 
 * Ranking of features
 
+* Feature importances are derived from Gini impurity instead of RandomForest R package's MDA. 
+
 For more details, please check the top of the docstring.
 
 We highly recommend using pruned trees with a depth between 3-7.
@@ -110,7 +113,7 @@ reason the first step of correction is the widely used Benjamini Hochberg FDR.
 Following that however we also need to account for the fact that we have been
 testing the same features over and over again in each iteration with the
 same test. For this scenario the Bonferroni is perfect, so it is applied by
-deviding the p-value threshold with the current iteration index.
+dividing the p-value threshold with the current iteration index.
 
 If this two step correction is not required, the two_step parameter has to be
 set to False, then (with perc=100) BorutaPy behaves exactly as the R version.
@@ -131,7 +134,7 @@ __n_estimators__ : int or string, default = 1000
 __perc__ : int, default = 100
    > Instead of the max we use the percentile defined by the user, to pick
    > our threshold for comparison between shadow and real features. The max
-   > tend to be too stringent. This provides a finer control over this. The
+   > tends to be too stringent. This provides a finer control over this. The
    > lower perc is the more false positives will be picked as relevant but
    > also the less relevant features will be left out. The usual trade-off.
    > The default is essentially the vanilla Boruta corresponding to the max.
@@ -172,34 +175,36 @@ __verbose__ : int, default=0
 
 ## Examples ##
 
-    import pandas as pd
-    from sklearn.ensemble import RandomForestClassifier
-    from boruta import BorutaPy
-    
-    # load X and y
-    # NOTE BorutaPy accepts numpy arrays only, hence the .values attribute
-    X = pd.read_csv('examples/test_X.csv', index_col=0).values
-    y = pd.read_csv('examples/test_y.csv', header=None, index_col=0).values
-    y = y.ravel()
-    
-    # define random forest classifier, with utilising all cores and
-    # sampling in proportion to y labels
-    rf = RandomForestClassifier(n_jobs=-1, class_weight='balanced', max_depth=5)
-    
-    # define Boruta feature selection method
-    feat_selector = BorutaPy(rf, n_estimators='auto', verbose=2, random_state=1)
-    
-    # find all relevant features - 5 features should be selected
-    feat_selector.fit(X, y)
-    
-    # check selected features - first 5 features are selected
-    feat_selector.support_
-    
-    # check ranking of features
-    feat_selector.ranking_
-    
-    # call transform() on X to filter it down to selected features
-    X_filtered = feat_selector.transform(X)
+```python
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from boruta import BorutaPy
+
+# load X and y
+# NOTE BorutaPy accepts numpy arrays only, hence the .values attribute
+X = pd.read_csv('examples/test_X.csv', index_col=0).values
+y = pd.read_csv('examples/test_y.csv', header=None, index_col=0).values
+y = y.ravel()
+
+# define random forest classifier, with utilising all cores and
+# sampling in proportion to y labels
+rf = RandomForestClassifier(n_jobs=-1, class_weight='balanced', max_depth=5)
+
+# define Boruta feature selection method
+feat_selector = BorutaPy(rf, n_estimators='auto', verbose=2, random_state=1)
+
+# find all relevant features - 5 features should be selected
+feat_selector.fit(X, y)
+
+# check selected features - first 5 features are selected
+feat_selector.support_
+
+# check ranking of features
+feat_selector.ranking_
+
+# call transform() on X to filter it down to selected features
+X_filtered = feat_selector.transform(X)
+```
 
 ## References ##
 
