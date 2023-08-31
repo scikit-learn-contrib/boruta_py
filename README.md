@@ -45,7 +45,7 @@ transform or fit_transform, to run the feature selection.
 
 For more, see the docs of these functions, and the examples below.
 
-Original code and method by: Miron B. Kursa, https://notabug.org/mbq/Boruta/wiki/FAQ
+[Original code](https://gitlab.com/mbq/Boruta) and method was authored by Miron B. Kursa.
 
 Boruta is an all relevant feature selection method, while most other are
 minimal optimal; this means it tries to find all features carrying
