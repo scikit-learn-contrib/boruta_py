@@ -175,6 +175,9 @@ __verbose__ : int, default=0
 
 ## Examples ##
 
+[![Open example notebook](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/https://raw.githubusercontent.com/scikit-learn-contrib/boruta_py/master/boruta/examples/Madalon_Data_Set.ipynb)
+[![Open example notebook](https://b.mineo.app/static/img/open_in_mineo.svg)](https://b.mineo.app/import/https://raw.githubusercontent.com/scikit-learn-contrib/boruta_py/master/boruta/examples/Madalon_Data_Set.ipynb)
+
 ```python
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
