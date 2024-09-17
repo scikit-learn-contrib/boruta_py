@@ -206,19 +206,24 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         self.__version__ = '0.3'
         self._is_lightgbm = 'lightgbm' in str(type(self.estimator))
 
-    def fit(self, X, y):
+    def fit(self, X, y, C=None):
         """
-        Fits the Boruta feature selection with the provided estimator.
+        Fits the Boruta feature selection with the provided estimator. X contains the features the importance of which
+        we want to test. C contains all the features we know are important or that we don't want to test
 
         Parameters
         ----------
-        X : array-like, shape = [n_samples, n_features]
-            The training input samples.
+        X : array-like, shape = [n_samples, n_test_features]
+            The training input samples columns to be tested
 
         y : array-like, shape = [n_samples]
             The target values.
+
+        C : array-line, shape = [n_samples, n_secured_features]
+            The training input samples columns we don't test
         """
 
+        self.C = C
         return self._fit(X, y)
 
     def transform(self, X, weak=False, return_df=False):
@@ -461,7 +466,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
                 "The estimator does not have a max_depth property, as a result "
                 " the number of trees to use cannot be estimated automatically."
             )
-        if depth == None:
+        if depth is None:
             depth = 10
         # how many times a feature should be considered on average
         f_repr = 100
@@ -471,13 +476,14 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         return n_estimators
 
     def _get_imp(self, X, y):
+        data = X if self.C is None else np.hstack((X, self.C))
         try:
-            self.estimator.fit(X, y)
+            self.estimator.fit(data, y)
         except Exception as e:
             raise ValueError('Please check your X and y variable. The provided '
                              'estimator cannot be fitted to your data.\n' + str(e))
         try:
-            imp = self.estimator.feature_importances_
+            imp = self.estimator.feature_importances_[:X.shape[1]]
         except Exception:
             raise ValueError('Only methods with feature_importance_ attribute '
                              'are currently supported in BorutaPy.')
@@ -495,7 +501,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         # deep copy the matrix for the shadow matrix
         x_sha = np.copy(x_cur)
         # make sure there's at least 5 columns in the shadow matrix for
-        while (x_sha.shape[1] < 5):
+        while x_sha.shape[1] < 5:
             x_sha = np.hstack((x_sha, x_sha))
         # shuffle xSha
         x_sha = np.apply_along_axis(self._get_shuffle, 0, x_sha)
