@@ -49,7 +49,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
     - Ranking of features:
         After fitting BorutaPy it provides the user with ranking of features.
         Confirmed ones are 1, Tentatives are 2, and the rejected are ranked
-        starting from 3, based on their feautre importance history through
+        starting from 3, based on their feature importance history through
         the iterations.
 
     We highly recommend using pruned trees with a depth between 3-7.
