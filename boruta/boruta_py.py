@@ -138,7 +138,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
     support_weak_ : array of shape [n_features]
 
         The mask of selected tentative features, which haven't gained enough
-        support during the max_iter number of iterations..
+        support during the max_iter number of iterations.
 
     ranking_ : array of shape [n_features]
 
