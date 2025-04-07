@@ -58,7 +58,7 @@ def test_if_it_works_with_dataframe_input(Xy):
     assert list(range(5)) == list(np.where(bt.support_)[0])
 
 
-def test_it_dataframe_is_returned(Xy):
+def test_dataframe_is_returned(Xy):
     X, y = Xy
     X_df, y_df = pd.DataFrame(X), pd.Series(y)
     rfc = RandomForestClassifier()
