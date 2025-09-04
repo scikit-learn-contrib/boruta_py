@@ -38,4 +38,4 @@ jobs:
     - name: Build a binary wheel
       run: python setup.py sdist bdist_wheel
     - name: Publish distribution 📦 to PyPI
-      uses: pypa/gh-action-pypi-publish@v1.9.0
+      uses: pypa/gh-action-pypi-publish@v1.13.0
