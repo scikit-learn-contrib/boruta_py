@@ -326,7 +326,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
 
         # set n_estimators
         if self.n_estimators != 'auto':
-            self.estimator.set_params(n_estimators=self.n_estimators)
+            self._set_n_estimators(self.n_estimators)
 
         # main feature selection loop
         while np.any(dec_reg == 0) and _iter < self.max_iter:
@@ -335,7 +335,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
                 # number of features that aren't rejected
                 not_rejected = np.where(dec_reg >= 0)[0].shape[0]
                 n_tree = self._get_tree_num(not_rejected)
-                self.estimator.set_params(n_estimators=n_tree)
+                self._set_n_estimators(n_estimators=n_tree)
 
             # make sure we start with a new tree in each iteration
             if self._is_lightgbm:
@@ -453,6 +453,17 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         else:
             X = X[:, indices]
         return X
+
+    def _set_n_estimators(self, n_estimators):
+        try:
+            self.estimator.set_params(n_estimators=n_estimators)
+        except ValueError:
+            raise ValueError(
+                f"The estimator {self.estimator} does not take the parameter "
+                "n_estimators. Use Random Forests or gradient boosting machines "
+                "instead."
+            )
+        return self
 
     def _get_tree_num(self, n_feat):
         depth = None
