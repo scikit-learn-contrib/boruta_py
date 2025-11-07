@@ -3,6 +3,7 @@ from boruta import BorutaPy
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 import numpy as np
+from sklearn.datasets import make_classification
 
 
 class BorutaTestCases(unittest.TestCase):
@@ -50,6 +51,18 @@ class BorutaTestCases(unittest.TestCase):
 
         # check it dataframe is returned when return_df=True
         self.assertIsInstance(bt.transform(X_df, return_df=True), pd.DataFrame)
+
+    def test_custom_shadow_feature_count(self):
+        X, y = make_classification(n_samples=100, n_features=10, random_state=42)
+        self.assertIsNotNone(X)
+        self.assertIsNotNone(y)
+
+        rf = RandomForestClassifier(n_estimators=10, random_state=42)
+        selector = BorutaPy(rf, n_shadow_features=3, random_state=42)
+        selector.fit(X, y)
+
+        self.assertEqual(selector.support_.shape[0], X.shape[1])
+
 
 if __name__ == '__main__':
     unittest.main()

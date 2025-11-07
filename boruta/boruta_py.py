@@ -190,11 +190,12 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         Journal of Statistical Software, Vol. 36, Issue 11, Sep 2010
     """
 
-    def __init__(self, estimator, n_estimators=1000, perc=100, alpha=0.05,
+    def __init__(self, estimator, n_estimators=1000, n_shadow_features=None, perc=100, alpha=0.05,
                  two_step=True, max_iter=100, random_state=None, verbose=0,
                  early_stopping=False, n_iter_no_change=20):
         self.estimator = estimator
         self.n_estimators = n_estimators
+        self.n_shadow_features = n_shadow_features
         self.perc = perc
         self.alpha = alpha
         self.two_step = two_step
@@ -321,7 +322,8 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         # the best of the shadow features
         hit_reg = np.zeros(n_feat, dtype=int)
         # these record the history of the iterations
-        imp_history = np.zeros(n_feat, dtype=float)
+
+        imp_history = np.empty((0, n_feat), dtype=float)
         sha_max_history = []
 
         # set n_estimators
@@ -343,16 +345,25 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             else:
                 self.estimator.set_params(random_state=self.random_state)
 
-            # add shadow attributes, shuffle them and train estimator, get imps
             cur_imp = self._add_shadows_get_imps(X, y, dec_reg)
 
-            # get the threshold of shadow importances we will use for rejection
+            # calculate shadow importance threshold
             imp_sha_max = np.percentile(cur_imp[1], self.perc)
 
-            # record importance history
+            # record max shadow importance
             sha_max_history.append(imp_sha_max)
-            imp_history = np.vstack((imp_history, cur_imp[0]))
 
+            # indices of features currently considered (not rejected)
+            x_cur_ind = np.where(dec_reg >= 0)[0]
+
+            # create full-length vector with NaNs for rejected features
+            full_imp_real = np.full(n_feat, np.nan, dtype=float)
+
+            # assign real importances into the appropriate feature positions
+            full_imp_real[x_cur_ind] = cur_imp[0]
+
+            # stack the full-length importance vector as a new row
+            imp_history = np.vstack([imp_history, full_imp_real.reshape(1, -1)])
             # register which feature is more imp than the max of shadows
             hit_reg = self._assign_hits(hit_reg, cur_imp, imp_sha_max)
 
@@ -490,24 +501,49 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         return seq
 
     def _add_shadows_get_imps(self, X, y, dec_reg):
-        # find features that are tentative still
+        # rng = check_random_state(self.random_state)
+        
         x_cur_ind = np.where(dec_reg >= 0)[0]
-        x_cur = np.copy(X[:, x_cur_ind])
-        x_cur_w = x_cur.shape[1]
-        # deep copy the matrix for the shadow matrix
-        x_sha = np.copy(x_cur)
-        # make sure there's at least 5 columns in the shadow matrix for
-        while (x_sha.shape[1] < 5):
-            x_sha = np.hstack((x_sha, x_sha))
-        # shuffle xSha
+        x_cur = X[:, x_cur_ind]
+        n_real = x_cur.shape[1]
+
+        # Generate shadow features
+        if self.n_shadow_features is None:
+            # Original behavior: one shadow per real feature
+            x_sha = np.copy(x_cur)
+            n_sha = x_sha.shape[1]
+        else:
+            # Custom behavior: generate exactly n_shadow_features
+            n_sha = self.n_shadow_features
+            x_sha = np.zeros((x_cur.shape[0], n_sha))
+            for i in range(n_sha):
+                # col = rng.randint(0, n_real)
+                col = self.random_state.randint(0, n_real)
+                x_sha[:, i] = x_cur[:, col]
+
+        # Ensure at least 5 shadow features
+        if x_sha.shape[1] < 5 and x_sha.shape[1] > 0:
+            repeats = int(np.ceil(5 / x_sha.shape[1]))
+            x_sha = np.tile(x_sha, (1, repeats))[:, :5]
+        elif x_sha.shape[1] == 0:
+            raise ValueError("No shadow features were generated — check n_shadow_features or x_cur shape.")
+
+        # Final safety check
+        if x_sha.shape[0] != x_cur.shape[0]:
+            raise ValueError(f"Row mismatch: x_cur has {x_cur.shape[0]} rows, x_sha has {x_sha.shape[0]} rows.")
+
+        # Shuffle each shadow feature column
         x_sha = np.apply_along_axis(self._get_shuffle, 0, x_sha)
-        # get importance of the merged matrix
-        imp = self._get_imp(np.hstack((x_cur, x_sha)), y)
-        # separate importances of real and shadow features
-        imp_sha = imp[x_cur_w:]
-        imp_real = np.zeros(X.shape[1])
-        imp_real[:] = np.nan
-        imp_real[x_cur_ind] = imp[:x_cur_w]
+
+        # Concatenate real and shadow features
+        X_concat = np.hstack((x_cur, x_sha))
+
+        # Get importances
+        imp = self._get_imp(X_concat, y)
+
+        imp_real = imp[:n_real]
+        imp_sha = imp[n_real:n_real + x_sha.shape[1]]
+
         return imp_real, imp_sha
 
     def _assign_hits(self, hit_reg, cur_imp, imp_sha_max):
