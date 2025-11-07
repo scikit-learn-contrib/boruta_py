@@ -43,13 +43,13 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         crucial parameter. For more info, please read about the perc parameter.
     - Automatic tree number:
         Setting the n_estimator to 'auto' will calculate the number of trees
-        in each itartion based on the number of features under investigation.
+        in each iteration based on the number of features under investigation.
         This way more trees are used when the training data has many features
         and less when most of the features have been rejected.
     - Ranking of features:
         After fitting BorutaPy it provides the user with ranking of features.
         Confirmed ones are 1, Tentatives are 2, and the rejected are ranked
-        starting from 3, based on their feautre importance history through
+        starting from 3, based on their feature importance history through
         the iterations.
 
     We highly recommend using pruned trees with a depth between 3-7.
@@ -138,7 +138,7 @@ class BorutaPy(BaseEstimator, TransformerMixin):
     support_weak_ : array of shape [n_features]
 
         The mask of selected tentative features, which haven't gained enough
-        support during the max_iter number of iterations..
+        support during the max_iter number of iterations.
 
     ranking_ : array of shape [n_features]
 
