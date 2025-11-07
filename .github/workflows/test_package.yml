@@ -20,6 +20,8 @@ jobs:
 
           # Python 3.11 with different scikit-learn versions
           - python-version: "3.11"
+            sklearn-version: "1.4.0"
+          - python-version: "3.11"
             sklearn-version: "1.5.2"
           - python-version: "3.11"
             sklearn-version: "1.6.1"
@@ -27,6 +29,8 @@ jobs:
             sklearn-version: "1.7.0"
 
           # Python 3.11 with different NumPy versions
+          - python-version: "3.11"
+            numpy-version: "1.18.2"
           - python-version: "3.11"
             numpy-version: "1.26.4"
           - python-version: "3.11"
