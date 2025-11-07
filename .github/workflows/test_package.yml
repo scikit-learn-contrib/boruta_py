@@ -12,22 +12,39 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        include:
+          - python-version: "3.10"
+          - python-version: "3.12"
+          - python-version: "3.13"
+          # Add three variants for Python 3.11 with different sklearn versions
+          - python-version: "3.11"
+            sklearn-version: "1.5.2"
+          - python-version: "3.11"
+            sklearn-version: "1.6.1"
+          - python-version: "3.11"
+            sklearn-version: "1.7.0"
 
     steps:
       - uses: actions/checkout@v5
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      # You can test your matrix by printing the current Python version
+
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r test_requirements.txt
+          # Only install specific sklearn version if defined in matrix
+          if [ -n "${{ matrix.sklearn-version }}" ]; then
+            pip install scikit-learn==${{ matrix.sklearn-version }}
+          fi
+
       - name: Test with pytest
         run: |
           pip install pytest
