@@ -8,8 +8,8 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
         include:
@@ -37,6 +37,11 @@ jobs:
             numpy-version: "2.2.2"
           - python-version: "3.11"
             numpy-version: "2.3.1"
+
+    name: >-
+      Python ${{ matrix.python-version }}
+      ${{ matrix.sklearn-version && format('(scikit-learn {0})', matrix.sklearn-version) || '' }}
+      ${{ matrix.numpy-version && format('(NumPy {0})', matrix.numpy-version) || '' }}
 
     steps:
       - uses: actions/checkout@v5
