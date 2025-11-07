@@ -356,13 +356,15 @@ class BorutaPy(BaseEstimator, TransformerMixin):
             # register which feature is more imp than the max of shadows
             hit_reg = self._assign_hits(hit_reg, cur_imp, imp_sha_max)
 
-            # based on hit_reg we check if a feature is doing better than
-            # expected by chance
-            dec_reg = self._do_tests(dec_reg, hit_reg, _iter)
+            # Only test after the 5th round.
+            if _iter > 4:
+                # based on hit_reg we check if a feature is doing better than
+                # expected by chance
+                dec_reg = self._do_tests(dec_reg, hit_reg, _iter)
 
-            # print out confirmed features
-            if self.verbose > 0 and _iter < self.max_iter:
-                self._print_results(dec_reg, _iter, 0)
+                # print out confirmed features
+                if self.verbose > 0 and _iter < self.max_iter:
+                    self._print_results(dec_reg, _iter, 0)
             if _iter < self.max_iter:
                 _iter += 1
                 
