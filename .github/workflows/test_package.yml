@@ -1,0 +1,78 @@
+name: Test boruta
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          # Regular Python versions (no special package versions)
+          - python-version: "3.10"
+          - python-version: "3.12"
+          - python-version: "3.13"
+
+          # Python 3.11 with different scikit-learn versions
+          - python-version: "3.11"
+            sklearn-version: "1.5.2"
+          - python-version: "3.11"
+            sklearn-version: "1.6.1"
+          - python-version: "3.11"
+            sklearn-version: "1.7.0"
+
+          # Python 3.11 with different NumPy versions
+          - python-version: "3.11"
+            numpy-version: "1.26.4"
+          - python-version: "3.11"
+            numpy-version: "2.0.1"
+          - python-version: "3.11"
+            numpy-version: "2.1.1"
+          - python-version: "3.11"
+            numpy-version: "2.2.2"
+          - python-version: "3.11"
+            numpy-version: "2.3.1"
+
+    name: >-
+      Python ${{ matrix.python-version }}
+      ${{ matrix.sklearn-version && format('(scikit-learn {0})', matrix.sklearn-version) || '' }}
+      ${{ matrix.numpy-version && format('(NumPy {0})', matrix.numpy-version) || '' }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r test_requirements.txt
+
+          # Install specific scikit-learn version if defined
+          if [ -n "${{ matrix.sklearn-version }}" ]; then
+            echo "Installing scikit-learn==${{ matrix.sklearn-version }}"
+            pip install scikit-learn==${{ matrix.sklearn-version }}
+          fi
+
+          # Install specific NumPy version if defined
+          if [ -n "${{ matrix.numpy-version }}" ]; then
+            echo "Installing numpy==${{ matrix.numpy-version }}"
+            pip install numpy==${{ matrix.numpy-version }}
+          fi
+
+      - name: Test with pytest
+        run: |
+          pip install pytest
+          pytest
