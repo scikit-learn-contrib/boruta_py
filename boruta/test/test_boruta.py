@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier, ExtraTreeClassifier
 
 from boruta import BorutaPy
 
@@ -26,8 +27,8 @@ def Xy():
 
     # 5 relevant features
     X[:, 0] = z
-    X[:, 1] = (y * np.abs(np.random.normal(0, 1, 1000))
-               + np.random.normal(0, 0.1, 1000))
+    X[:, 1] = (y * np.abs(np.random.normal(0, 1, 1000)) +
+               np.random.normal(0, 0.1, 1000))
     X[:, 2] = y + np.random.normal(0, 1, 1000)
     X[:, 3] = y**2 + np.random.normal(0, 1, 1000)
     X[:, 4] = np.sqrt(y) + np.random.binomial(2, 0.1, 1000)
@@ -65,3 +66,18 @@ def test_dataframe_is_returned(Xy):
     bt = BorutaPy(rfc)
     bt.fit(X_df, y_df)
     assert isinstance(bt.transform(X_df, return_df=True), pd.DataFrame)
+
+
+@pytest.mark.parametrize("tree", [ExtraTreeClassifier(), DecisionTreeClassifier()])
+def test_boruta_with_decision_trees(tree, Xy):
+    msg = (
+        f"The estimator {tree} does not take the parameter "
+        "n_estimators. Use Random Forests or gradient boosting machines "
+        "instead."
+    )
+    X, y = Xy
+    bt = BorutaPy(tree)
+    with pytest.raises(ValueError) as record:
+        bt.fit(X, y)
+
+    assert str(record.value) == msg
