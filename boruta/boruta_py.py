@@ -45,13 +45,13 @@ class BorutaPy(BaseEstimator, SelectorMixin):
         crucial parameter. For more info, please read about the perc parameter.
     - Automatic tree number:
         Setting the n_estimator to 'auto' will calculate the number of trees
-        in each itartion based on the number of features under investigation.
+        in each iteration based on the number of features under investigation.
         This way more trees are used when the training data has many features
         and less when most of the features have been rejected.
     - Ranking of features:
         After fitting BorutaPy it provides the user with ranking of features.
         Confirmed ones are 1, Tentatives are 2, and the rejected are ranked
-        starting from 3, based on their feautre importance history through
+        starting from 3, based on their feature importance history through
         the iterations.
 
     We highly recommend using pruned trees with a depth between 3-7.
@@ -140,7 +140,7 @@ class BorutaPy(BaseEstimator, SelectorMixin):
     support_weak_ : array of shape [n_features]
 
         The mask of selected tentative features, which haven't gained enough
-        support during the max_iter number of iterations..
+        support during the max_iter number of iterations.
 
     ranking_ : array of shape [n_features]
 
@@ -328,7 +328,7 @@ class BorutaPy(BaseEstimator, SelectorMixin):
 
         # set n_estimators
         if self.n_estimators != 'auto':
-            self.estimator.set_params(n_estimators=self.n_estimators)
+            self._set_n_estimators(self.n_estimators)
 
         # main feature selection loop
         while np.any(dec_reg == 0) and _iter < self.max_iter:
@@ -337,7 +337,7 @@ class BorutaPy(BaseEstimator, SelectorMixin):
                 # number of features that aren't rejected
                 not_rejected = np.where(dec_reg >= 0)[0].shape[0]
                 n_tree = self._get_tree_num(not_rejected)
-                self.estimator.set_params(n_estimators=n_tree)
+                self._set_n_estimators(n_estimators=n_tree)
 
             # make sure we start with a new tree in each iteration
             if self._is_lightgbm:
@@ -358,13 +358,15 @@ class BorutaPy(BaseEstimator, SelectorMixin):
             # register which feature is more imp than the max of shadows
             hit_reg = self._assign_hits(hit_reg, cur_imp, imp_sha_max)
 
-            # based on hit_reg we check if a feature is doing better than
-            # expected by chance
-            dec_reg = self._do_tests(dec_reg, hit_reg, _iter)
+            # Only test after the 5th round.
+            if _iter > 4:
+                # based on hit_reg we check if a feature is doing better than
+                # expected by chance
+                dec_reg = self._do_tests(dec_reg, hit_reg, _iter)
 
-            # print out confirmed features
-            if self.verbose > 0 and _iter < self.max_iter:
-                self._print_results(dec_reg, _iter, 0)
+                # print out confirmed features
+                if self.verbose > 0 and _iter < self.max_iter:
+                    self._print_results(dec_reg, _iter, 0)
             if _iter < self.max_iter:
                 _iter += 1
                 
@@ -453,6 +455,17 @@ class BorutaPy(BaseEstimator, SelectorMixin):
         else:
             X = X[:, indices]
         return X
+
+    def _set_n_estimators(self, n_estimators):
+        try:
+            self.estimator.set_params(n_estimators=n_estimators)
+        except ValueError:
+            raise ValueError(
+                f"The estimator {self.estimator} does not take the parameter "
+                "n_estimators. Use Random Forests or gradient boosting machines "
+                "instead."
+            )
+        return self
 
     def _get_support_mask(self):
         check_is_fitted(self, 'support_')
