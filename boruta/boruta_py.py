@@ -289,10 +289,18 @@ class BorutaPy(BaseEstimator, SelectorMixin):
         # check input params
         self._check_params(X, y)
 
+        feature_names = getattr(X, "columns", None)
+        if feature_names is not None:
+            self.feature_names_in_ = np.asarray(feature_names, dtype=object)
+        else:
+            self.feature_names_in_ = None
+
         if not isinstance(X, np.ndarray):
             X = self._validate_pandas_input(X) 
         if not isinstance(y, np.ndarray):
             y = self._validate_pandas_input(y)
+
+        self.n_features_in_ = X.shape[1]
 
         self.random_state = check_random_state(self.random_state)
         
