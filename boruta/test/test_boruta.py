@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.exceptions import NotFittedError
 from sklearn.tree import DecisionTreeClassifier, ExtraTreeClassifier
 
 from boruta import BorutaPy
@@ -66,6 +67,62 @@ def test_dataframe_is_returned(Xy):
     bt = BorutaPy(rfc)
     bt.fit(X_df, y_df)
     assert isinstance(bt.transform(X_df, return_df=True), pd.DataFrame)
+
+
+def test_selector_mixin_get_support_requires_fit():
+    bt = BorutaPy(RandomForestClassifier())
+    with pytest.raises(NotFittedError):
+        bt.get_support()
+
+
+def test_selector_mixin_get_support_matches_mask(Xy):
+    X, y = Xy
+    bt = BorutaPy(RandomForestClassifier())
+    bt.fit(X, y)
+
+    assert np.array_equal(bt.get_support(), bt.support_)
+    assert np.array_equal(bt.get_support(indices=True),
+                          np.where(bt.support_)[0])
+
+
+def test_selector_mixin_inverse_transform_restores_selected_features(Xy):
+    X, y = Xy
+    bt = BorutaPy(RandomForestClassifier())
+    bt.fit(X, y)
+
+    X_selected = bt.transform(X)
+    X_reconstructed = bt.inverse_transform(X_selected)
+
+    assert X_reconstructed.shape == X.shape
+    assert np.allclose(X_reconstructed[:, bt.support_], X[:, bt.support_])
+
+    if (~bt.support_).any():
+        assert np.allclose(X_reconstructed[:, ~bt.support_], 0)
+
+
+def test_selector_mixin_get_feature_names_out_requires_fit():
+    bt = BorutaPy(RandomForestClassifier())
+    with pytest.raises(NotFittedError):
+        bt.get_feature_names_out()
+
+
+def test_selector_mixin_get_feature_names_out_returns_selected_names(Xy):
+    X, y = Xy
+    bt = BorutaPy(RandomForestClassifier())
+    bt.fit(X, y)
+
+    expected_default = np.array([f"x{i}" for i in np.where(bt.support_)[0]])
+    assert np.array_equal(bt.get_feature_names_out(), expected_default)
+
+    custom_names = np.array([f"feature_{i}" for i in range(X.shape[1])])
+    selected_names = bt.get_feature_names_out(custom_names)
+    assert np.array_equal(selected_names, custom_names[bt.support_])
+
+    columns = [f"col_{i}" for i in range(X.shape[1])]
+    X_df = pd.DataFrame(X, columns=columns)
+    bt_df = BorutaPy(RandomForestClassifier())
+    bt_df.fit(X_df, y)
+    assert np.array_equal(bt_df.get_feature_names_out(), np.array(columns)[bt_df.support_])
 
 
 @pytest.mark.parametrize("tree", [ExtraTreeClassifier(), DecisionTreeClassifier()])

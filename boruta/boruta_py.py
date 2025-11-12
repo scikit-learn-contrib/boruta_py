@@ -12,11 +12,13 @@ from __future__ import print_function, division
 import numpy as np
 import scipy as sp
 from sklearn.utils import check_random_state, check_X_y
-from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.base import BaseEstimator
+from sklearn.feature_selection import SelectorMixin
+from sklearn.utils.validation import check_is_fitted
 import warnings
 
 
-class BorutaPy(BaseEstimator, TransformerMixin):
+class BorutaPy(BaseEstimator, SelectorMixin):
     """
     Improved Python implementation of the Boruta R package.
 
@@ -287,10 +289,18 @@ class BorutaPy(BaseEstimator, TransformerMixin):
         # check input params
         self._check_params(X, y)
 
+        feature_names = getattr(X, "columns", None)
+        if feature_names is not None:
+            self.feature_names_in_ = np.asarray(feature_names, dtype=object)
+        else:
+            self.feature_names_in_ = None
+
         if not isinstance(X, np.ndarray):
             X = self._validate_pandas_input(X) 
         if not isinstance(y, np.ndarray):
             y = self._validate_pandas_input(y)
+
+        self.n_features_in_ = X.shape[1]
 
         self.random_state = check_random_state(self.random_state)
         
@@ -464,6 +474,10 @@ class BorutaPy(BaseEstimator, TransformerMixin):
                 "instead."
             )
         return self
+
+    def _get_support_mask(self):
+        check_is_fitted(self, 'support_')
+        return self.support_
 
     def _get_tree_num(self, n_feat):
         depth = None
