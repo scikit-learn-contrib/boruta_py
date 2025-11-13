@@ -11,6 +11,7 @@ License: BSD 3 clause
 from __future__ import print_function, division
 import numpy as np
 import scipy as sp
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils import check_random_state, check_X_y
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection import SelectorMixin
@@ -18,7 +19,7 @@ from sklearn.utils.validation import check_is_fitted
 import warnings
 
 
-class BorutaPy(BaseEstimator, SelectorMixin):
+class BorutaPy(SelectorMixin, BaseEstimator):
     """
     Improved Python implementation of the Boruta R package.
 
@@ -74,7 +75,7 @@ class BorutaPy(BaseEstimator, SelectorMixin):
     Parameters
     ----------
 
-    estimator : object
+    estimator : object, default = RandomForestClassifier()
         A supervised learning estimator, with a 'fit' method that returns the
         feature_importances_ attribute. Important features must correspond to
         high absolute values in the feature_importances_.
@@ -192,7 +193,7 @@ class BorutaPy(BaseEstimator, SelectorMixin):
         Journal of Statistical Software, Vol. 36, Issue 11, Sep 2010
     """
 
-    def __init__(self, estimator, n_estimators=1000, perc=100, alpha=0.05,
+    def __init__(self, estimator=RandomForestClassifier(), n_estimators=1000, perc=100, alpha=0.05,
                  two_step=True, max_iter=100, random_state=None, verbose=0,
                  early_stopping=False, n_iter_no_change=20):
         self.estimator = estimator
