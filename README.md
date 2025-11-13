@@ -1,8 +1,21 @@
 # boruta_py #
 
-[![License](https://img.shields.io/github/license/scikit-learn-contrib/boruta_py)](https://github.com/scikit-learn-contrib/boruta_py/blob/master/LICENSE)
-[![PyPI version](https://badge.fury.io/py/Boruta.svg)](https://badge.fury.io/py/Boruta)
-[![Anaconda-Server Badge](https://anaconda.org/conda-forge/boruta_py/badges/version.svg)](https://anaconda.org/conda-forge/boruta_py)
+| | |
+| --- | --- |
+| **Open&#160;Source** | [![License](https://img.shields.io/github/license/scikit-learn-contrib/boruta_py)](https://github.com/scikit-learn-contrib/boruta_py/blob/master/LICENSE) |
+| **Code** | [![PyPI version](https://badge.fury.io/py/Boruta.svg)](https://badge.fury.io/py/Boruta) [![Anaconda-Server Badge](https://anaconda.org/conda-forge/boruta_py/badges/version.svg)](https://anaconda.org/conda-forge/boruta_py) |
+| **Downloads** | [![Monthly Downloads](https://img.shields.io/pypi/dm/boruta_py)](https://img.shields.io/pypi/dm/boruta)  [![Downloads](https://static.pepy.tech/personalized-badge/boruta?period=total&units=international_system&left_color=grey&right_color=green&left_text=total-downloads%20(pypi))](https://pepy.tech/project/boruta_py)|
+| **Meta** | [![GitHub contributors](https://img.shields.io/github/contributors/scikit-learn-contrib/boruta_py?logo=GitHub)](https://github.com/scikit-learn-contrib/boruta_py/graphs/contributors) [![first-timers](https://img.shields.io/badge/first--timers--only-friendly-blue.svg?style=flat)](https://www.firsttimersonly.com/) |
+| **Testing** | [![Test boruta](https://github.com/scikit-learn-contrib/boruta_py/actions/workflows/test_package.yml/badge.svg?branch=master)](https://github.com/scikit-learn-contrib/boruta_py/actions/workflows/test_package.yml) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) |
+<div align="center">
+
+
+</div>
+
+
+
+
+
 
 This project hosts Python implementations of the [Boruta all-relevant feature selection method](https://www.jstatsoft.org/article/view/v036i11).
 
