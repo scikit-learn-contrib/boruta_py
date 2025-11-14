@@ -15,6 +15,7 @@ from sklearn.utils import check_random_state, check_X_y
 from sklearn.base import BaseEstimator
 from sklearn.feature_selection import SelectorMixin
 from sklearn.utils.validation import check_is_fitted
+from sklearn.utils._set_output import _get_output_config
 import warnings
 
 
@@ -240,7 +241,7 @@ class BorutaPy(BaseEstimator, SelectorMixin):
         weak : boolean, optional
             Deprecated. Set ``weak`` in the constructor instead.
 
-        return_df : bool, optional
+        return_df : boolean, optional
             Deprecated. Output type now follows scikit-learn's standard
             ``set_output``/``set_config`` mechanism.
         """
@@ -253,6 +254,9 @@ class BorutaPy(BaseEstimator, SelectorMixin):
                 stacklevel=2,
             )
             self.weak = weak
+        requested_transform = None
+        prev_output_config = None
+        force_numpy = return_df is False
         if return_df is not None:
             warnings.warn(
                 "`return_df` is deprecated and will be removed in a future "
@@ -261,11 +265,20 @@ class BorutaPy(BaseEstimator, SelectorMixin):
                 FutureWarning,
                 stacklevel=2,
             )
+            prev_output_config = _get_output_config("transform", estimator=self)["dense"]
+            requested_transform = "pandas" if return_df else "default"
+            if prev_output_config != requested_transform:
+                self.set_output(transform=requested_transform)
         try:
-            return super().transform(X)
+            result = super().transform(X)
         finally:
             if weak is not None:
                 self.weak = prev_weak
+            if requested_transform is not None and prev_output_config != requested_transform:
+                self.set_output(transform=prev_output_config)
+        if force_numpy and hasattr(result, "to_numpy"):
+            result = result.to_numpy()
+        return result
 
     def fit_transform(self, X, y=None, **fit_params):
         """

@@ -85,6 +85,33 @@ def test_return_df_parameter_emits_warning(Xy):
     assert isinstance(transformed, pd.DataFrame)
 
 
+def test_return_df_true_temporarily_enables_pandas_output(Xy):
+    X, y = Xy
+    bt = BorutaPy(RandomForestClassifier())
+    bt.fit(X, y)
+
+    baseline = bt.transform(X)
+    assert isinstance(baseline, np.ndarray)
+
+    with pytest.warns(FutureWarning, match="`return_df` is deprecated"):
+        transformed = bt.transform(X, return_df=True)
+    assert isinstance(transformed, pd.DataFrame)
+
+    reverted = bt.transform(X)
+    assert isinstance(reverted, np.ndarray)
+
+
+def test_return_df_false_with_dataframe_input_returns_numpy(Xy):
+    X, y = Xy
+    X_df = pd.DataFrame(X)
+    bt = BorutaPy(RandomForestClassifier())
+    bt.fit(X_df, y)
+
+    with pytest.warns(FutureWarning, match="`return_df` is deprecated"):
+        transformed = bt.transform(X_df, return_df=False)
+    assert isinstance(transformed, np.ndarray)
+
+
 def test_weak_attribute_controls_support_mask(Xy):
     X, y = Xy
     bt = BorutaPy(RandomForestClassifier(), weak=True)
