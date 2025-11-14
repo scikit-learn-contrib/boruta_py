@@ -283,14 +283,6 @@ class BorutaPy(BaseEstimator, SelectorMixin):
         return_df = fit_params.pop("return_df", None)
         return self.fit(X, y, **fit_params).transform(X, weak=weak, return_df=return_df)
 
-    def _validate_pandas_input(self, arg):
-        try:
-            return arg.values
-        except AttributeError:
-            raise ValueError(
-                "input needs to be a numpy array or pandas data frame."
-            )
-
     def _fit(self, X, y):
         # check input params
         self._check_params(X, y)
@@ -301,10 +293,7 @@ class BorutaPy(BaseEstimator, SelectorMixin):
         else:
             self.feature_names_in_ = None
 
-        if not isinstance(X, np.ndarray):
-            X = self._validate_pandas_input(X) 
-        if not isinstance(y, np.ndarray):
-            y = self._validate_pandas_input(y)
+        X, y = check_X_y(X, y, accept_sparse=False, ensure_2d=True, dtype=None, estimator=self)
 
         self.n_features_in_ = X.shape[1]
 
