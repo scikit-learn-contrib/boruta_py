@@ -1,6 +1,9 @@
+import re
+
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn import config_context
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.exceptions import NotFittedError
 from sklearn.tree import DecisionTreeClassifier, ExtraTreeClassifier
@@ -65,8 +68,53 @@ def test_dataframe_is_returned(Xy):
     X_df, y_df = pd.DataFrame(X), pd.Series(y)
     rfc = RandomForestClassifier()
     bt = BorutaPy(rfc)
-    bt.fit(X_df, y_df)
-    assert isinstance(bt.transform(X_df, return_df=True), pd.DataFrame)
+    with config_context(transform_output="pandas"):
+        bt.fit(X_df, y_df)
+        transformed = bt.transform(X_df)
+    assert isinstance(transformed, pd.DataFrame)
+
+
+def test_return_df_parameter_emits_warning(Xy):
+    X, y = Xy
+    X_df, y_df = pd.DataFrame(X), pd.Series(y)
+    bt = BorutaPy(RandomForestClassifier())
+    with config_context(transform_output="pandas"):
+        bt.fit(X_df, y_df)
+        with pytest.warns(FutureWarning, match=re.escape("`set_output(transform='pandas')`")):
+            transformed = bt.transform(X_df, return_df=True)
+    assert isinstance(transformed, pd.DataFrame)
+
+
+def test_weak_attribute_controls_support_mask(Xy):
+    X, y = Xy
+    bt = BorutaPy(RandomForestClassifier(), weak=True)
+    bt.fit(X, y)
+
+    union_mask = bt.support_ | bt.support_weak_
+    assert np.array_equal(bt.get_support(), union_mask)
+
+
+def test_transform_with_weak_parameter_is_deprecated(Xy):
+    X, y = Xy
+    bt = BorutaPy(RandomForestClassifier())
+    bt.fit(X, y)
+    bt.support_[5] = False
+    bt.support_weak_[5] = True
+
+    with pytest.warns(FutureWarning, match=re.escape("`weak` is deprecated")):
+        transformed = bt.transform(X, weak=True)
+
+    expected_features = np.count_nonzero(bt.support_ | bt.support_weak_)
+    assert transformed.shape[1] == expected_features
+
+
+def test_fit_transform_with_weak_parameter_is_deprecated(Xy):
+    X, y = Xy
+    bt = BorutaPy(RandomForestClassifier())
+    with pytest.warns(FutureWarning, match=re.escape("`weak` is deprecated")):
+        transformed = bt.fit_transform(X, y, weak=True)
+    expected_features = np.count_nonzero(bt.support_ | bt.support_weak_)
+    assert transformed.shape[1] == expected_features
 
 
 def test_selector_mixin_get_support_requires_fit():
