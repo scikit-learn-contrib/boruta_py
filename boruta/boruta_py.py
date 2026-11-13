@@ -435,9 +435,6 @@ class BorutaPy(BaseEstimator, SelectorMixin):
                     # and 2 otherwise
                     ranks = ranks - np.min(ranks) + 2
                 self.ranking_[not_selected] = ranks
-        else:
-            # all are selected, thus we set feature supports to True
-            self.support_ = np.ones(n_feat, dtype=bool)
 
         self.importance_history_ = imp_history
 
