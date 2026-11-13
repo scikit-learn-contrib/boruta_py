@@ -302,7 +302,7 @@ class BorutaPy(BaseEstimator, SelectorMixin):
 
         self.n_features_in_ = X.shape[1]
 
-        self.random_state = check_random_state(self.random_state)
+        random_state = check_random_state(self.random_state)
         
         early_stopping = False
         if self.early_stopping:
@@ -349,12 +349,12 @@ class BorutaPy(BaseEstimator, SelectorMixin):
 
             # make sure we start with a new tree in each iteration
             if self._is_lightgbm:
-                self.estimator.set_params(random_state=self.random_state.randint(0, 10000))
+                self.estimator.set_params(random_state=random_state.randint(0, 10000))
             else:
-                self.estimator.set_params(random_state=self.random_state)
+                self.estimator.set_params(random_state=random_state)
 
             # add shadow attributes, shuffle them and train estimator, get imps
-            cur_imp = self._add_shadows_get_imps(X, y, dec_reg)
+            cur_imp = self._add_shadows_get_imps(X, y, dec_reg, random_state)
 
             # get the threshold of shadow importances we will use for rejection
             imp_sha_max = np.percentile(cur_imp[1], self.perc)
@@ -510,11 +510,12 @@ class BorutaPy(BaseEstimator, SelectorMixin):
                              'are currently supported in BorutaPy.')
         return imp
 
-    def _get_shuffle(self, seq):
-        self.random_state.shuffle(seq)
+    @staticmethod
+    def _get_shuffle(seq, random_state):
+        random_state.shuffle(seq)
         return seq
 
-    def _add_shadows_get_imps(self, X, y, dec_reg):
+    def _add_shadows_get_imps(self, X, y, dec_reg, random_state):
         # find features that are tentative still
         x_cur_ind = np.where(dec_reg >= 0)[0]
         x_cur = np.copy(X[:, x_cur_ind])
@@ -525,7 +526,7 @@ class BorutaPy(BaseEstimator, SelectorMixin):
         while (x_sha.shape[1] < 5):
             x_sha = np.hstack((x_sha, x_sha))
         # shuffle xSha
-        x_sha = np.apply_along_axis(self._get_shuffle, 0, x_sha)
+        x_sha = np.apply_along_axis(self._get_shuffle, 0, x_sha, random_state)
         # get importance of the merged matrix
         imp = self._get_imp(np.hstack((x_cur, x_sha)), y)
         # separate importances of real and shadow features
