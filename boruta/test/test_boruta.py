@@ -52,6 +52,45 @@ def test_if_boruta_extracts_relevant_features(Xy):
     assert list(range(5)) == list(np.where(bt.support_)[0])
 
 
+def test_integer_random_state_repeats_fit(Xy):
+    X, y = Xy
+    selector = BorutaPy(
+        RandomForestClassifier(max_depth=4),
+        n_estimators=12,
+        max_iter=12,
+        random_state=7,
+    )
+
+    selector.fit(X, y)
+    first_history = selector.importance_history_.copy()
+    first_support = selector.get_support().copy()
+    selector.fit(X, y)
+
+    np.testing.assert_array_equal(selector.importance_history_, first_history)
+    np.testing.assert_array_equal(selector.get_support(), first_support)
+    assert selector.get_params(deep=False)["random_state"] == 7
+
+
+def test_random_state_instance_advances_across_fits(Xy):
+    X, y = Xy
+    random_state = np.random.RandomState(7)
+    selector = BorutaPy(
+        RandomForestClassifier(max_depth=4),
+        n_estimators=12,
+        max_iter=12,
+        random_state=random_state,
+    )
+
+    selector.fit(X, y)
+    first_history = selector.importance_history_.copy()
+    selector.fit(X, y)
+
+    assert selector.get_params(deep=False)["random_state"] is random_state
+    assert not np.array_equal(
+        selector.importance_history_, first_history, equal_nan=True
+    )
+
+
 def test_if_it_works_with_dataframe_input(Xy):
     X, y = Xy
     X_df, y_df = pd.DataFrame(X), pd.Series(y)
