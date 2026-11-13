@@ -138,3 +138,63 @@ def test_boruta_with_decision_trees(tree, Xy):
         bt.fit(X, y)
 
     assert str(record.value) == msg
+
+
+@pytest.mark.parametrize("n_features", [1, 3])
+@pytest.mark.parametrize("max_iter,confirmed", [(6, False), (20, True)])
+@pytest.mark.parametrize("method", ["fit", "fit_transform"])
+def test_no_rejected_features_preserves_confirmation_status(
+        n_features, max_iter, confirmed, method):
+    y = np.tile([0, 1], 100)
+    X = np.tile(y[:, np.newaxis], (1, n_features))
+    bt = BorutaPy(RandomForestClassifier(max_depth=3), n_estimators=32,
+                  random_state=7, max_iter=max_iter)
+
+    result = getattr(bt, method)(X, y)
+
+    # The short run cannot confirm the features, but their importance is
+    # sufficient to keep all of them as tentative after the rough fix.
+    assert bt.n_features_ == (n_features if confirmed else 0)
+    np.testing.assert_array_equal(bt.ranking_, np.full(n_features, 1 if confirmed else 2))
+    np.testing.assert_array_equal(bt.support_weak_, np.full(n_features, not confirmed))
+    np.testing.assert_array_equal(bt.support_, np.full(n_features, confirmed))
+    assert not np.any(bt.support_ & bt.support_weak_)
+    np.testing.assert_array_equal(bt.get_support(), bt.support_)
+    assert bt.get_feature_names_out().size == bt.n_features_
+    assert bt.transform(X).shape == (len(y), bt.n_features_)
+    np.testing.assert_array_equal(bt.transform(X, weak=True), X)
+    if method == "fit_transform":
+        np.testing.assert_array_equal(result, bt.transform(X))
+    else:
+        assert result is bt
+
+
+def test_no_rejected_features_preserves_mixed_confirmation_status():
+    y = np.tile([0, 1], 100)
+    rng = np.random.RandomState(0)
+    noisy_y = np.logical_xor(y, rng.random_sample(y.size) < 0.4).astype(int)
+    X = np.column_stack((y, noisy_y))
+    bt = BorutaPy(RandomForestClassifier(max_depth=3), n_estimators=32,
+                  random_state=7, max_iter=9).fit(X, y)
+
+    assert bt.n_features_ == 1
+    np.testing.assert_array_equal(bt.ranking_, [1, 2])
+    np.testing.assert_array_equal(bt.support_weak_, [False, True])
+    np.testing.assert_array_equal(bt.support_, [True, False])
+    np.testing.assert_array_equal(bt.get_support(indices=True), [0])
+    np.testing.assert_array_equal(bt.get_feature_names_out(), ["x0"])
+    np.testing.assert_array_equal(bt.transform(X), X[:, :1])
+    np.testing.assert_array_equal(bt.transform(X, weak=True), X)
+
+
+def test_all_features_rejected_preserves_empty_support():
+    y = np.tile([0, 1], 100)
+    X = np.zeros((y.size, 3))
+    bt = BorutaPy(RandomForestClassifier(max_depth=3), n_estimators=32,
+                  random_state=7, max_iter=20).fit(X, y)
+
+    assert bt.n_features_ == 0
+    assert not bt.support_.any()
+    assert not bt.support_weak_.any()
+    assert bt.transform(X).shape == (y.size, 0)
+    assert bt.transform(X, weak=True).shape == (y.size, 0)
